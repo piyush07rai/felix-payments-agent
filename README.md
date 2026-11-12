@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <b>A modular, enterprise-grade autonomous AI payments copilot that connects to any database, orchestrates any operational tool, and resolves complex payment incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
+  <b>Felix is a modular, enterprise-grade autonomous AI payments agent that connects to any database, orchestrates operational tools, and investigates and resolves complex payment incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
 </p>
 
 ---
