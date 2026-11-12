@@ -5,50 +5,12 @@
   <img src="https://img.shields.io/badge/Platform-Universal_Payments_Agent-0070F3?style=for-the-badge" alt="Platform" />
   <img src="https://img.shields.io/badge/Data_Tier-Any_DB_%7C_Any_Warehouse-FF9800?style=for-the-badge" alt="Databases" />
   <img src="https://img.shields.io/badge/Data_Privacy-Zero--PII_Vault-7928CA?style=for-the-badge" alt="Privacy" />
-  <img src="https://img.shields.io/badge/Tests-30%2F30_Passing-brightgreen?style=for-the-badge" alt="Tests" />
+  <img src="https://img.shields.io/badge/Ingress-Slack_%7C_Teams_%7C_Web-4A154B?style=for-the-badge" alt="Ingress" />
 </p>
 
 <p align="center">
   <b>A modular, enterprise-grade autonomous AI payments copilot that connects to any database, orchestrates any operational tool, and resolves complex payment incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
 </p>
-
----
-
-## 🎯 Platform Vision: Beyond a Single Analyst
-
-While traditional tools are built as rigid, single-purpose dashboards, **Felix is an extensible Agentic Payments Operating System**. 
-
-It uses a **Land-and-Expand Product Architecture**:
-* **Flagship Module (The High-ROI Wedge)**: *Autonomous Payment Authorization & Decline Intelligence*. Resolves the multi-million-dollar hair-on-fire problem of unexplained authorization drops in seconds.
-* **Extensible Agentic Core**: The exact same conversational ingress, Zero-PII sanitization vault, reasoning loop, and human governance framework power multiple operational domains across **any payment rail** (Cards, UPI, A2A, Pix, FedNow, Wallets, and BNPL).
-
-```mermaid
-flowchart TD
-    subgraph CorePlatform["Felix Core Agentic Platform (Decoupled Engine)"]
-        Ingress["Omnichannel Workplace Ingress\n(Slack · Microsoft Teams · Webhook API · Executive Console)"]
-        Vault["Zero-PII Decoupling Vault\n(Surrogate Tokenizer · Schema-Level 17-Column Deny-List)"]
-        Planner["Gemini 3.8 Flash Reasoning Engine\n(Autonomous Multi-Step Hypothesis Formulation & Verification)"]
-        Governance["Enterprise Governance & Safety\n(Human Approval Framework · execution_locked = true · Audit Log)"]
-    end
-
-    subgraph PluggableModules["Pluggable Payments Operational Domains"]
-        Mod1["✅ Module 1: Auth & Decline Diagnostics\n(Current Flagship Module)\n• ISO 8583 semantic breakdown\n• Anomaly cohort isolation\n• Issuer timeout analysis"]
-        Mod2["🔄 Module 2: Smart Gateway Routing\n• Multi-acquirer MDR / interchange comparison\n• Real-time gateway failover recommendations\n• Traffic share optimization"]
-        Mod3["⚖️ Module 3: Reconciliation & Settlement\n• Processor ledger vs bank payout audit\n• Missing settlement batch detection\n• Chargeback & refund balancing"]
-        Mod4["🛡️ Module 4: Fraud & 3DS Risk Tuning\n• 3DS challenge vs frictionless drop analysis\n• Velocity abuse spike detection\n• Dispute representment evidence drafting"]
-    end
-
-    subgraph PluggableData["Pluggable Data Tier (Any DB / Any Warehouse)"]
-        Postgres["PostgreSQL / MySQL\n(Production OLTP)"]
-        Snowflake["Snowflake / Databricks / BigQuery\n(Cloud Data Warehouses)"]
-        ClickHouse["ClickHouse / DuckDB\n(Ultra-Fast Columnar OLAP)"]
-        SQLite["SQLite Sandboxed\n(Local / Edge / Demo Engine)"]
-    end
-
-    Ingress --> Vault --> Planner --> Governance
-    Planner <--> PluggableModules
-    PluggableModules <--> PluggableData
-```
 
 ---
 
@@ -144,7 +106,26 @@ The core orchestration engine handles context management, event deduplication, t
 
 ---
 
-## 🚀 Quickstart: Run in 60 Seconds
+## 🌐 Live Interactive Demo & Testing
+
+Experience Felix live in action through the web console or directly inside Slack:
+
+### Option A: Live Web Console
+* **🔗 Live App URL**: [https://felix-payments-agent.onrender.com](https://felix-payments-agent.onrender.com) *(Update with your live Render URL)*
+* Explore live Chart.js visualizations, run autonomous investigations, and inspect the Enterprise Integrations admin panel.
+
+### Option B: Test Felix Live in Slack
+Want to test how Felix operates in a real workplace environment?
+1. **Join the Demo Slack Workspace**: [👉 Click Here to Join the Slack Workspace](YOUR_SLACK_INVITE_LINK_HERE) *(Replace with your Slack invite link)*
+2. Jump into the `#felix-demo` channel.
+3. Mention `@Felix` and ask any decline question:
+   - `@Felix why did our RuPay approval rate drop?`
+   - `@Felix break down the recent declines by issuing bank.`
+   - `@Felix recommend an action to recover lost GMV.`
+
+---
+
+## 🚀 Quickstart: Run Locally in 60 Seconds
 
 ### Option 1: Docker (Recommended)
 
@@ -182,62 +163,41 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## 📊 Live Interactive Demo Walkthrough
+## 🎯 Platform Vision: Beyond a Single Analyst
 
-Once the application is running, open [http://localhost:8000](http://localhost:8000):
+While traditional tools are built as rigid, single-purpose dashboards, **Felix is an extensible Agentic Payments Operating System**. 
 
-1. **Auto-Populated Dataset**: Felix automatically initializes and seeds 5,000 realistic transactions on initial startup.
-2. **Overview Tab**: Inspect live Chart.js visualizations (Approval Rate, Response Code Breakdown, Network Distribution, Hourly Volume).
-3. **AI Investigation Tab**:
-   - Click one of the quick prompts (e.g., *"Why did RuPay authorization drop?"*).
-   - Watch the live **Agent Execution Events** stream: SQL queries executed, ISO 8583 lookups, and baseline comparisons.
-4. **Findings Tab**: Review the structured remediation playbook, estimated approval uplift (+3.8%), and the **Human Approval Governance Card**.
-5. **Enterprise Integrations Tab**:
-   - View live Slack and Microsoft Teams connector status cards.
-   - Inspect the **Integration Activity Audit Trail** with real-time platform and status filters.
-   - Switch between **Standard User** and **Organisation Administrator** to see RBAC permissions in action.
-6. **Evaluation Benchmark**:
-   - Run quantitative accuracy, precision, and recall evaluations against isolated ground-truth benchmarks.
+It uses a **Land-and-Expand Product Architecture**:
+* **Flagship Module (The High-ROI Wedge)**: *Autonomous Payment Authorization & Decline Intelligence*. Resolves the multi-million-dollar hair-on-fire problem of unexplained authorization drops in seconds.
+* **Extensible Agentic Core**: The exact same conversational ingress, Zero-PII sanitization vault, reasoning loop, and human governance framework power multiple operational domains across **any payment rail** (Cards, UPI, A2A, Pix, FedNow, Wallets, and BNPL).
 
----
+```mermaid
+flowchart TD
+    subgraph CorePlatform["Felix Core Agentic Platform (Decoupled Engine)"]
+        Ingress["Omnichannel Workplace Ingress\n(Slack · Microsoft Teams · Webhook API · Executive Console)"]
+        Vault["Zero-PII Decoupling Vault\n(Surrogate Tokenizer · Schema-Level 17-Column Deny-List)"]
+        Planner["Gemini 3.8 Flash Reasoning Engine\n(Autonomous Multi-Step Hypothesis Formulation & Verification)"]
+        Governance["Enterprise Governance & Safety\n(Human Approval Framework · execution_locked = true · Audit Log)"]
+    end
 
-## 🧪 Comprehensive Test Suite
+    subgraph PluggableModules["Pluggable Payments Operational Domains"]
+        Mod1["✅ Module 1: Auth & Decline Diagnostics\n(Current Flagship Module)\n• ISO 8583 semantic breakdown\n• Anomaly cohort isolation\n• Issuer timeout analysis"]
+        Mod2["🔄 Module 2: Smart Gateway Routing\n• Multi-acquirer MDR / interchange comparison\n• Real-time gateway failover recommendations\n• Traffic share optimization"]
+        Mod3["⚖️ Module 3: Reconciliation & Settlement\n• Processor ledger vs bank payout audit\n• Missing settlement batch detection\n• Chargeback & refund balancing"]
+        Mod4["🛡️ Module 4: Fraud & 3DS Risk Tuning\n• 3DS challenge vs frictionless drop analysis\n• Velocity abuse spike detection\n• Dispute representment evidence drafting"]
+    end
 
-Felix comes with **30 enterprise unit tests** validating all security layers, integrations, and tools:
+    subgraph PluggableData["Pluggable Data Tier (Any DB / Any Warehouse)"]
+        Postgres["PostgreSQL / MySQL\n(Production OLTP)"]
+        Snowflake["Snowflake / Databricks / BigQuery\n(Cloud Data Warehouses)"]
+        ClickHouse["ClickHouse / DuckDB\n(Ultra-Fast Columnar OLAP)"]
+        SQLite["SQLite Sandboxed\n(Local / Edge / Demo Engine)"]
+    end
 
-```bash
-python3 -m unittest discover tests -v
+    Ingress --> Vault --> Planner --> Governance
+    Planner <--> PluggableModules
+    PluggableModules <--> PluggableData
 ```
-
-```text
-Ran 30 tests in 0.285s
-OK
-```
-
----
-
-## ☁️ Free Production Deployment (Render)
-
-Deploy your own live instance of Felix for free on [Render](https://render.com):
-
-1. **Fork or Push** this repository to your GitHub account.
-2. Sign in to [Render](https://render.com) and click **New + > Web Service**.
-3. Select your repository: `felix-payments-agent`.
-4. Configure:
-   - **Environment**: `Docker`
-   - **Plan**: `Free`
-5. Under **Environment Variables**, add:
-   - `GEMINI_API_KEY`: Your key from Google AI Studio.
-   - `APP_ENV`: `production`
-6. Click **Deploy Web Service**. Render builds the container and provides a free public HTTPS endpoint (e.g., `https://felix-payments-agent.onrender.com`).
-7. Use this HTTPS URL to register Slack webhooks (`/api/slack/events`) or Teams messaging endpoints (`/api/teams/messages`).
-
----
-
-## 📚 Technical Documentation & Strategy Dossiers
-
-* 📄 **[Executive Product Presentation & Business Dossier](file:///Users/piyushrai/.gemini/antigravity/brain/89e26ea4-565d-482c-ac21-b434045ba1d2/felix_product_presentation.md)**: Full 8-slide PM presentation deck, ROI calculations ($2.5M uplift per $500M GMV), and competitive moat.
-* 🔒 **[Enterprise Security & Access Control Architecture](file:///Users/piyushrai/.gemini/antigravity/brain/89e26ea4-565d-482c-ac21-b434045ba1d2/enterprise_security_architecture.md)**: Cryptographic signature verification, RBAC matrix, and audit compliance details.
 
 ---
 
