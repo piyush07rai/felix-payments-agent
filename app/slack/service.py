@@ -10,6 +10,7 @@ import logging
 import re
 from typing import Any, Dict, Optional
 
+from app.audit_logging import log_lifecycle_event
 from app.config import settings
 from app.integration import CommonMessageRequest, CommonMessageResponse, common_message_processor
 from app.slack.client import SlackClient, slack_client
@@ -52,12 +53,24 @@ class SlackEventService:
         if not query:
             query = "Help: Provide overview of recent payment decline trends."
 
-        logger.info(
-            "Handling Slack @Felix mention in channel %s (thread: %s) from user %s: '%s'",
-            channel_id, thread_ts, user_id, query[:80]
+        log_lifecycle_event(
+            "SLACK_INGRESS",
+            f"Slack mention from user {user_id} in channel {channel_id}",
+            {"channel": channel_id, "thread_ts": thread_ts, "query": query[:80]}
         )
 
-        # 1. Post immediate progressive status message in thread (Acknowledge human user)
+        # 1. Immediate visual acknowledgment in Slack (Emoji Reaction within ~100ms)
+        try:
+            await asyncio.to_thread(
+                self.client.add_reaction,
+                channel=channel_id,
+                timestamp=message_ts,
+                name="eyes"
+            )
+        except Exception as react_err:
+            logger.debug("Could not add Slack reaction emoji: %s", react_err)
+
+        # 2. Post immediate progressive status message in thread (Acknowledge human user)
         interim_post = await asyncio.to_thread(
             self.client.post_message,
             channel=channel_id,
@@ -77,7 +90,7 @@ class SlackEventService:
         )
         interim_ts = interim_post.get("ts")
 
-        # 2. Map into normalized Phase 2 CommonMessageRequest
+        # 3. Map into normalized Phase 2 CommonMessageRequest
         req = CommonMessageRequest(
             platform="slack",
             workspace_id=team_id,
@@ -136,9 +149,10 @@ class SlackEventService:
                 blocks=slack_blocks
             )
 
-        logger.info(
-            "Delivered Slack response for session %s (turn #%d, %d tools)",
-            resp.session_id, resp.turn_index, len(resp.tool_activity)
+        log_lifecycle_event(
+            "SLACK_EGRESS",
+            f"Delivered Slack response for session {resp.session_id} (turn #{resp.turn_index})",
+            {"channel": channel_id, "thread_ts": thread_ts, "tools_count": len(resp.tool_activity)}
         )
         return resp
 

@@ -87,50 +87,154 @@ function initNavigation() {
 }
 
 /**
- * Model versioning control: type/update active Gemini model version dynamically.
+ * Admin Multi-Model Selector & Resiliency Controls (Gemini / ChatGPT / Local Fallback + Auto-Failover).
  */
 function initModelVersioning() {
-  const modelInput = document.getElementById("model-version-input");
-  const modelBtn = document.getElementById("model-update-btn");
-  if (!modelInput || !modelBtn) return;
+  const modelSelect = document.getElementById("model-provider-select");
+  const failoverBtn = document.getElementById("failover-toggle-btn");
+  const viewLogsBtn = document.getElementById("view-system-logs-btn");
+  const logsModal = document.getElementById("system-logs-modal");
+  const closeLogsBtn = document.getElementById("close-logs-modal-btn");
+  const refreshLogsBtn = document.getElementById("refresh-logs-btn");
+  const clearLogsBtn = document.getElementById("clear-logs-btn");
+  const logsContent = document.getElementById("system-logs-content");
 
-  // Fetch initial active model from backend
+  let isFailoverEnabled = true;
+
+  // 1. Fetch initial configuration from backend
   fetch("/api/config/model")
     .then(r => r.json())
     .then(d => {
-      if (d.model) modelInput.value = d.model;
+      if (modelSelect && d.provider && d.model) {
+        const targetVal = `${d.provider}:${d.model}`;
+        for (const opt of modelSelect.options) {
+          if (opt.value === targetVal || opt.value.startsWith(`${d.provider}:`)) {
+            modelSelect.value = opt.value;
+            break;
+          }
+        }
+      }
+      if (d.enable_failover !== undefined) {
+        isFailoverEnabled = Boolean(d.enable_failover);
+        updateFailoverBadge();
+      }
     })
     .catch(() => {});
 
-  modelBtn.addEventListener("click", async () => {
-    const newModel = modelInput.value.trim();
-    if (!newModel) return;
+  // 2. Model selection change
+  if (modelSelect) {
+    modelSelect.addEventListener("change", async () => {
+      const parts = modelSelect.value.split(":");
+      const provider = parts[0];
+      const model = parts[1] || "";
 
-    modelBtn.disabled = true;
-    modelBtn.textContent = "...";
+      try {
+        const resp = await fetch("/api/config/model", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: provider,
+            model: model,
+            enable_failover: isFailoverEnabled
+          })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+          await fetchSystemStatus();
+        } else {
+          alert(data.detail || "Failed to switch AI model.");
+        }
+      } catch (err) {
+        alert(`Error updating AI model: ${err.message}`);
+      }
+    });
+  }
 
+  // 3. Failover toggle
+  function updateFailoverBadge() {
+    if (!failoverBtn) return;
+    if (isFailoverEnabled) {
+      failoverBtn.style.background = "#ecfdf5";
+      failoverBtn.style.color = "#047857";
+      failoverBtn.style.borderColor = "#a7f3d0";
+      failoverBtn.textContent = "⚡ Failover: ON";
+      failoverBtn.title = "Automatic Failover active: Seamlessly switches if primary model times out or hits 500 error.";
+    } else {
+      failoverBtn.style.background = "#f1f5f9";
+      failoverBtn.style.color = "#64748b";
+      failoverBtn.style.borderColor = "#cbd5e1";
+      failoverBtn.textContent = "⚡ Failover: OFF";
+      failoverBtn.title = "Failover disabled: Only the primary model will be invoked.";
+    }
+  }
+
+  if (failoverBtn) {
+    failoverBtn.addEventListener("click", async () => {
+      isFailoverEnabled = !isFailoverEnabled;
+      updateFailoverBadge();
+      try {
+        await fetch("/api/config/model", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enable_failover: isFailoverEnabled })
+        });
+      } catch (e) {
+        console.warn("Failed to persist failover toggle", e);
+      }
+    });
+  }
+
+  // 4. System Logs Modal & Live Polling
+  async function loadSystemLogs() {
+    if (!logsContent) return;
+    logsContent.textContent = "Loading real-time system logs...";
     try {
-      const resp = await fetch("/api/config/model", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: newModel })
-      });
+      const resp = await fetch("/api/logs?limit=150");
       const data = await resp.json();
-      if (resp.ok && data.success) {
-        modelBtn.textContent = "Saved";
-        setTimeout(() => { modelBtn.textContent = "Set"; modelBtn.disabled = false; }, 1500);
-        await fetchSystemStatus();
+      if (data.logs && data.logs.length > 0) {
+        logsContent.textContent = data.logs.map(entry => {
+          const dt = entry.timestamp ? entry.timestamp.split("T")[1].replace("Z", "") : "";
+          const cat = entry.category || "INFO";
+          const msg = entry.message || "";
+          const det = entry.details && Object.keys(entry.details).length > 0 ? " " + JSON.stringify(entry.details) : "";
+          return `[${dt}] [${cat}] ${msg}${det}`;
+        }).join("\n");
+        logsContent.scrollTop = logsContent.scrollHeight;
       } else {
-        alert(data.detail || "Failed to update model version.");
-        modelBtn.textContent = "Set";
-        modelBtn.disabled = false;
+        logsContent.textContent = "No lifecycle logs recorded yet. Send a query via Slack, Teams, or Web Chat to observe live logs.";
       }
     } catch (err) {
-      alert(`Network error updating model: ${err.message}`);
-      modelBtn.textContent = "Set";
-      modelBtn.disabled = false;
+      logsContent.textContent = `Error loading logs: ${err.message}`;
     }
-  });
+  }
+
+  if (viewLogsBtn && logsModal) {
+    viewLogsBtn.addEventListener("click", () => {
+      logsModal.style.display = "flex";
+      loadSystemLogs();
+    });
+  }
+
+  if (closeLogsBtn && logsModal) {
+    closeLogsBtn.addEventListener("click", () => {
+      logsModal.style.display = "none";
+    });
+  }
+
+  if (refreshLogsBtn) {
+    refreshLogsBtn.addEventListener("click", () => {
+      loadSystemLogs();
+    });
+  }
+
+  if (clearLogsBtn) {
+    clearLogsBtn.addEventListener("click", async () => {
+      if (confirm("Clear in-memory request lifecycle logs?")) {
+        await fetch("/api/logs", { method: "DELETE" });
+        loadSystemLogs();
+      }
+    });
+  }
 }
 
 /**
@@ -738,6 +842,56 @@ function initChatInterface() {
   const chips = document.querySelectorAll(".chip-btn");
   const autonomousBtn = document.getElementById("run-autonomous-btn");
 
+  let activeProgressBubble = null;
+
+  function updateLiveChatProgress(ev) {
+    if (!chatStream) return;
+    if (!activeProgressBubble) {
+      activeProgressBubble = document.createElement("div");
+      activeProgressBubble.className = "chat-message assistant-message live-progress-bubble";
+      activeProgressBubble.innerHTML = `
+        <div class="message-sender">
+          <span class="sender-avatar">AI</span>
+          <span id="progress-agent-label">Felix Decline Analyst</span>
+        </div>
+        <div class="message-bubble" style="display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px dashed #3b82f6; padding: 12px 16px; border-radius: 8px;">
+          <div class="spinner-sm" style="width: 20px; height: 20px; border: 2px solid #cbd5e1; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;"></div>
+          <div style="flex: 1;">
+            <div style="font-weight: 600; font-size: 0.82rem; color: #1e40af; display: flex; align-items: center; gap: 6px;">
+              <span id="chat-step-badge" style="background: #2563eb; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.72rem;">Step 1/15</span>
+              <span id="chat-stage-label" style="text-transform: uppercase; font-size: 0.72rem; color: #64748b;">ANALYZING</span>
+            </div>
+            <div id="chat-progress-desc" style="font-size: 0.82rem; color: #1e293b; margin-top: 4px; font-weight: 500;">
+              Formulating investigative hypothesis and analytical strategy...
+            </div>
+          </div>
+        </div>
+      `;
+      chatStream.appendChild(activeProgressBubble);
+      chatStream.scrollTop = chatStream.scrollHeight;
+    }
+
+    const badge = activeProgressBubble.querySelector("#chat-step-badge");
+    const stage = activeProgressBubble.querySelector("#chat-stage-label");
+    const desc = activeProgressBubble.querySelector("#chat-progress-desc");
+    const agentLbl = activeProgressBubble.querySelector("#progress-agent-label");
+
+    if (ev.step && badge) badge.textContent = `Step ${ev.step}/${ev.max_steps || 15}`;
+    if ((ev.stage || ev.status) && stage) stage.textContent = (ev.stage || ev.status).toUpperCase().replace(/_/g, " ");
+    const text = ev.action_text || ev.message;
+    if (text && desc) desc.textContent = text;
+    const agName = ev.agent_name || ev.agent;
+    if (agName && agentLbl) agentLbl.textContent = agName;
+    chatStream.scrollTop = chatStream.scrollHeight;
+  }
+
+  function removeLiveChatProgress() {
+    if (activeProgressBubble) {
+      activeProgressBubble.remove();
+      activeProgressBubble = null;
+    }
+  }
+
   chips.forEach((chip) => {
     chip.addEventListener("click", () => {
       const promptText = chip.getAttribute("data-prompt");
@@ -759,11 +913,18 @@ function initChatInterface() {
       setChatLoading(true);
 
       updateLiveBanner({
-        agent_name: "Gemini 3.8 Flash Analyst",
+        agent_name: "Felix Decline Analyst",
         step: 1,
         max_steps: 15,
         status: "thinking",
-        action_text: "Formulating query execution plan..."
+        action_text: "Formulating investigative strategy and plan..."
+      });
+
+      updateLiveChatProgress({
+        step: 1,
+        max_steps: 15,
+        stage: "thinking",
+        action_text: "Formulating investigative strategy and hypothesis..."
       });
 
       let finalResponseHandled = false;
@@ -774,9 +935,11 @@ function initChatInterface() {
         {
           onEvent: (ev) => {
             updateLiveBanner(ev);
+            updateLiveChatProgress(ev);
             appendLiveToolEvent(ev);
           },
           onError: (errMsg) => {
+            removeLiveChatProgress();
             appendChatMessage("assistant", `⚠️ ${errMsg}`);
             updateLiveBanner({
               status: "facing_error_retrying",
@@ -785,6 +948,7 @@ function initChatInterface() {
           },
           onComplete: (data) => {
             finalResponseHandled = true;
+            removeLiveChatProgress();
             const respText = data.response || "Investigation completed.";
             appendChatMessage("assistant", respText, data.privacy_audit);
             if (data.findings && data.findings.length > 0) {
@@ -799,6 +963,7 @@ function initChatInterface() {
         }
       );
 
+      removeLiveChatProgress();
       setChatLoading(false);
     });
   }
@@ -810,10 +975,17 @@ function initChatInterface() {
       setChatLoading(true);
 
       updateLiveBanner({
-        agent_name: "Gemini 3.8 Flash Analyst",
+        agent_name: "Felix Decline Analyst",
         step: 1,
         max_steps: 15,
         status: "thinking",
+        action_text: "Initializing autonomous decline investigation chain..."
+      });
+
+      updateLiveChatProgress({
+        step: 1,
+        max_steps: 15,
+        stage: "thinking",
         action_text: "Initializing autonomous decline investigation chain..."
       });
 
@@ -823,9 +995,11 @@ function initChatInterface() {
         {
           onEvent: (ev) => {
             updateLiveBanner(ev);
+            updateLiveChatProgress(ev);
             appendLiveToolEvent(ev);
           },
           onError: (errMsg) => {
+            removeLiveChatProgress();
             appendChatMessage("assistant", `⚠️ ${errMsg}`);
             updateLiveBanner({
               status: "facing_error_retrying",
@@ -833,6 +1007,7 @@ function initChatInterface() {
             });
           },
           onComplete: (data) => {
+            removeLiveChatProgress();
             const respText = data.response || "Autonomous audit completed.";
             appendChatMessage("assistant", respText, data.privacy_audit);
             if (data.findings && data.findings.length > 0) {
@@ -847,6 +1022,7 @@ function initChatInterface() {
         }
       );
 
+      removeLiveChatProgress();
       setChatLoading(false);
     });
   }
@@ -910,14 +1086,16 @@ function updateLiveBanner(ev) {
   if (!banner) return;
   banner.style.display = "flex";
 
-  if (ev.agent_name && agentName) {
-    agentName.textContent = ev.agent_name;
+  const agent = ev.agent_name || ev.agent;
+  if (agent && agentName) {
+    agentName.textContent = agent;
   }
   if (ev.step && chainStep) {
     chainStep.textContent = `Step ${ev.step}/${ev.max_steps || 15}`;
   }
-  if (ev.action_text && actionText) {
-    actionText.textContent = ev.action_text;
+  const text = ev.action_text || ev.message;
+  if (text && actionText) {
+    actionText.textContent = text;
   }
 
   const stage = ev.stage || ev.status;

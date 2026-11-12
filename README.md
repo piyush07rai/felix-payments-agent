@@ -9,6 +9,11 @@
 </p>
 
 <p align="center">
+  <a href="https://felix-payments-agent.onrender.com/"><b>🌐 Live Web App</b></a> &nbsp;&bull;&nbsp; 
+  <a href="https://payments-team-central.slack.com/archives/C0CGRRPPD99"><b>💬 Slack Incident Desk</b></a>
+</p>
+
+<p align="center">
   <b>Felix is a modular, enterprise-grade autonomous AI payments agent that connects to any database, orchestrates operational tools, and investigates and resolves complex payment incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
 </p>
 
@@ -108,18 +113,18 @@ The core orchestration engine handles context management, event deduplication, t
 
 ## 🌐 Live Interactive Demo & Testing
 
-Experience Felix live in action through the web console or directly inside Slack:
+Experience Felix live in production through the executive web console or directly inside Slack:
 
 ### Option A: Live Web Console
-* **🔗 Live App URL**: [https://felix-payments-agent.onrender.com](https://felix-payments-agent.onrender.com) *(Update with your live Render URL)*
-* Explore live Chart.js visualizations, run autonomous investigations, and inspect the Enterprise Integrations admin panel.
+* **🔗 Live App URL**: [https://felix-payments-agent.onrender.com/](https://felix-payments-agent.onrender.com/)
+* Explore live Chart.js visualizations, run autonomous decline investigations, test multi-model failover (Gemini / ChatGPT / Local SQL), inspect real-time logs, and access the Enterprise Integrations admin panel.
 
 ### Option B: Test Felix Live in Slack
 Want to test how Felix operates in a real workplace environment?
-1. **Join the Demo Slack Workspace**: [👉 Click Here to Join the Slack Workspace](YOUR_SLACK_INVITE_LINK_HERE) *(Replace with your Slack invite link)*
-2. Jump into the `#felix-demo` channel.
-3. Mention `@Felix` and ask any decline question:
-   - `@Felix why did our RuPay approval rate drop?`
+1. **Open the Slack Incident Channel**: [👉 Open `#payments-incidents` in Slack](https://payments-team-central.slack.com/archives/C0CGRRPPD99)
+2. Jump into the channel.
+3. Mention `@Felix` and ask any payment authorization or decline question:
+   - `@Felix why did our approval rate drop?`
    - `@Felix break down the recent declines by issuing bank.`
    - `@Felix recommend an action to recover lost GMV.`
 

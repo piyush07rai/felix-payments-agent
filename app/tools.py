@@ -144,6 +144,10 @@ def _emit_tool_event(event: Dict[str, Any]) -> None:
         try:
             if "timestamp" not in event:
                 event["timestamp"] = datetime.now(timezone.utc).isoformat()
+            if "action_text" not in event and "message" in event:
+                event["action_text"] = event["message"]
+            if "agent_name" not in event and "agent" in event:
+                event["agent_name"] = event["agent"]
             cb(event)
         except Exception as exc:
             logger.debug("Error in live event callback: %s", exc)

@@ -10,7 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.config import settings
+from app.config import settings, save_settings_to_env
+from app.audit_logging import get_recent_lifecycle_logs, clear_lifecycle_logs, log_lifecycle_event
 from app.agent import analyst_agent
 from app.investigation import investigation_manager
 from app.database import (
@@ -604,7 +605,9 @@ async def get_overview_analytics():
 # ==========================================
 
 class ModelConfigRequest(BaseModel):
-    model: str = Field(..., description="Gemini model name, e.g. gemini-3.8-flash")
+    provider: Optional[str] = Field(None, description="'gemini', 'openai', or 'fallback'")
+    model: Optional[str] = Field(None, description="Model identifier (e.g. gemini-3.8-flash, gpt-4o-mini)")
+    enable_failover: Optional[bool] = Field(None, description="Enable automatic failover across providers")
 
 
 class EvaluateRequest(BaseModel):
@@ -613,29 +616,103 @@ class EvaluateRequest(BaseModel):
 
 @app.get("/api/config/model")
 async def get_agent_model():
-    """Return active Gemini model and default version."""
+    """Return active provider, models, and failover status."""
+    st = analyst_agent.get_status()
     return {
-        "model": analyst_agent.model_name,
-        "default": "gemini-3.8-flash",
-        "supported_example_models": ["gemini-3.8-flash"]
+        "provider": analyst_agent.provider,
+        "model": st["model"],
+        "gemini_model": analyst_agent.model_name,
+        "openai_model": analyst_agent.openai_model,
+        "enable_failover": analyst_agent.enable_failover,
+        "gemini_configured": st["gemini_configured"],
+        "openai_configured": st["openai_configured"],
+        "supported_providers": [
+            {
+                "id": "gemini",
+                "name": "Google Gemini",
+                "default_model": "gemini-3.8-flash",
+                "models": ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-pro"]
+            },
+            {
+                "id": "openai",
+                "name": "OpenAI ChatGPT",
+                "default_model": "gpt-4o-mini",
+                "models": ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"]
+            },
+            {
+                "id": "fallback",
+                "name": "Autonomous Local SQL Engine (Offline)",
+                "default_model": "local-analytical-engine",
+                "models": ["local-analytical-engine"]
+            }
+        ]
     }
 
 
 @app.post("/api/config/model")
 async def update_agent_model(req: ModelConfigRequest):
-    """Dynamically update the active Gemini model version for the agent."""
-    new_model = req.model.strip()
-    if not new_model:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Model name cannot be empty.")
+    """Dynamically update active provider, model, and failover settings."""
+    provider = (req.provider or analyst_agent.provider).lower()
+    model = (req.model or "").strip()
 
-    analyst_agent.model_name = new_model
-    settings.GEMINI_MODEL = new_model
-    logger.info("Updated active agent model to: %s", new_model)
+    save_dict = {}
+    if req.enable_failover is not None:
+        analyst_agent.enable_failover = req.enable_failover
+        settings.ENABLE_AUTO_FAILOVER = req.enable_failover
+        save_dict["ENABLE_AUTO_FAILOVER"] = req.enable_failover
+
+    if req.provider:
+        analyst_agent.set_provider(provider, model=model or None, enable_failover=req.enable_failover)
+        settings.ACTIVE_PROVIDER = provider
+        save_dict["ACTIVE_PROVIDER"] = provider
+
+    if model:
+        if provider == "gemini":
+            analyst_agent.model_name = model
+            settings.GEMINI_MODEL = model
+            save_dict["GEMINI_MODEL"] = model
+        elif provider == "openai":
+            analyst_agent.openai_model = model
+            analyst_agent.openai_client.model_name = model
+            settings.OPENAI_MODEL = model
+            save_dict["OPENAI_MODEL"] = model
+
+    if save_dict:
+        try:
+            save_settings_to_env(save_dict)
+        except Exception:
+            pass
+
+    log_lifecycle_event(
+        "ADMIN_CONFIG",
+        f"Admin updated active AI model: Provider={provider}, Model={model or analyst_agent.model_name}, Failover={analyst_agent.enable_failover}",
+        {"provider": provider, "model": model, "failover": analyst_agent.enable_failover}
+    )
+
     return {
         "success": True,
-        "message": f"Active agent model successfully updated to '{new_model}'.",
-        "model": new_model
+        "message": f"Active AI routing updated to {provider} ({model or 'default'}).",
+        "provider": analyst_agent.provider,
+        "model": analyst_agent.model_name if analyst_agent.provider == "gemini" else analyst_agent.openai_model,
+        "enable_failover": analyst_agent.enable_failover
     }
+
+
+@app.get("/api/logs")
+async def get_system_lifecycle_logs(limit: int = 100, category: Optional[str] = None):
+    """Retrieve structured real-time lifecycle logs (Slack ingress, LLM calls, back-and-forth tool calls, failovers)."""
+    return {
+        "success": True,
+        "count": len(get_recent_lifecycle_logs(limit=limit, category=category)),
+        "logs": get_recent_lifecycle_logs(limit=limit, category=category)
+    }
+
+
+@app.delete("/api/logs")
+async def clear_system_lifecycle_logs():
+    """Clear in-memory lifecycle logs."""
+    clear_lifecycle_logs()
+    return {"success": True, "message": "Lifecycle logs cleared."}
 
 
 @app.post("/api/ground-truth/upload")

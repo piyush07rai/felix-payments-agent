@@ -12,8 +12,10 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
+from app.audit_logging import log_lifecycle_event
 from app.config import settings
 from app.database import get_transaction_count
+from app.openai_client import OpenAIAnalystClient
 from app.privacy import (
     PrivacyVault,
     set_active_privacy_vault,
@@ -93,17 +95,49 @@ ZERO-PII DECOUPLING & SURROGATE TOKENS:
 
 
 class DeclineAnalystAgent:
-    """Agent responsible for investigating payment transaction declines using Gemini."""
+    """Agent responsible for investigating payment transaction declines using Multi-Model AI (Gemini / OpenAI / Local)."""
 
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        provider: Optional[str] = None,
+        openai_key: Optional[str] = None,
+        openai_model: Optional[str] = None,
+        enable_failover: Optional[bool] = None,
+    ):
         self.api_key = api_key or settings.GEMINI_API_KEY
         self.model_name = model or settings.GEMINI_MODEL
+        self.provider = (provider or settings.ACTIVE_PROVIDER or "gemini").lower()
+        self.openai_model = openai_model or settings.OPENAI_MODEL or "gpt-4o-mini"
+        self.enable_failover = enable_failover if enable_failover is not None else settings.ENABLE_AUTO_FAILOVER
+        self.openai_client = OpenAIAnalystClient(api_key=openai_key or settings.OPENAI_API_KEY, model=self.openai_model)
         self._client: Optional[Any] = None
 
     @property
     def is_configured(self) -> bool:
         """Check whether the agent has a valid Gemini API key configured."""
         return bool(self.api_key and self.api_key.strip() != "" and self.api_key != "your_gemini_api_key_here")
+
+    @property
+    def is_openai_configured(self) -> bool:
+        """Check whether the agent has a valid OpenAI API key configured."""
+        return self.openai_client.is_configured
+
+    def set_provider(self, provider: str, model: Optional[str] = None, enable_failover: Optional[bool] = None) -> None:
+        """Dynamically update active provider and model across the system."""
+        clean_provider = provider.strip().lower()
+        if clean_provider not in ("gemini", "openai", "fallback"):
+            raise ValueError(f"Unsupported provider '{provider}'. Must be 'gemini', 'openai', or 'fallback'.")
+        self.provider = clean_provider
+        if model and model.strip():
+            if clean_provider == "gemini":
+                self.model_name = model.strip()
+            elif clean_provider == "openai":
+                self.openai_model = model.strip()
+                self.openai_client.model_name = self.openai_model
+        if enable_failover is not None:
+            self.enable_failover = bool(enable_failover)
 
     def get_client(self) -> Optional[Any]:
         """Initialize and return the Google Gen AI SDK client instance."""
@@ -126,12 +160,28 @@ class DeclineAnalystAgent:
     def get_status(self) -> Dict[str, Any]:
         """Return current configuration and tool registration status of the agent."""
         tool_names = [fn.__name__ for fn in self.get_tools()]
+        gemini_ready = self.is_configured
+        openai_ready = self.is_openai_configured
+
+        active_model = self.model_name if self.provider == "gemini" else (
+            self.openai_model if self.provider == "openai" else "local-analytical-engine"
+        )
+        provider_display = "Google Gemini" if self.provider == "gemini" else (
+            "OpenAI ChatGPT" if self.provider == "openai" else "Autonomous SQL Engine"
+        )
+
         return {
-            "configured": self.is_configured,
+            "configured": gemini_ready or openai_ready or (self.provider == "fallback"),
+            "gemini_configured": gemini_ready,
+            "openai_configured": openai_ready,
             "sdk_available": GENAI_AVAILABLE,
-            "model": self.model_name,
-            "provider": "Google Gemini",
-            "message": "Ready" if self.is_configured else "GEMINI_API_KEY is not set or using placeholder value.",
+            "active_provider": self.provider,
+            "provider": provider_display,
+            "model": active_model,
+            "gemini_model": self.model_name,
+            "openai_model": self.openai_model,
+            "enable_failover": self.enable_failover,
+            "message": "Ready",
             "tools_count": len(tool_names),
             "tools": tool_names
         }
@@ -222,13 +272,22 @@ class DeclineAnalystAgent:
         findings: List[Dict[str, Any]] = []
         step_counter = [0]
 
-        agent_display_name = f"Gemini 3.8 Flash Analyst ({self.model_name})"
+        agent_display_name = (
+            f"Gemini 3.8 Flash Analyst ({self.model_name})" if self.provider == "gemini"
+            else (f"OpenAI Analyst ({self.openai_model})" if self.provider == "openai" else "Autonomous SQL Engine")
+        )
 
         def emit(event: Dict[str, Any]):
             if "timestamp" not in event:
                 event["timestamp"] = datetime.now(timezone.utc).isoformat()
             if "agent" not in event:
                 event["agent"] = agent_display_name
+            if "agent_name" not in event:
+                event["agent_name"] = event.get("agent", agent_display_name)
+            if "action_text" not in event and "message" in event:
+                event["action_text"] = event["message"]
+            if "max_steps" not in event:
+                event["max_steps"] = max_steps
             if event_callback:
                 try:
                     event_callback(event)
@@ -242,6 +301,7 @@ class DeclineAnalystAgent:
             emit({
                 "type": "error",
                 "stage": "no_data",
+                "action_text": err_msg,
                 "message": err_msg
             })
             return {
@@ -256,32 +316,6 @@ class DeclineAnalystAgent:
                 "disclaimer": DISCLAIMER_TEXT
             }
 
-        # 2. Gemini configuration & runtime availability check
-        use_fallback_reasoner = False
-        if not self.is_configured:
-            cfg_msg = "Gemini API key is not configured. Please add GEMINI_API_KEY to your .env file to enable AI investigation."
-            emit({
-                "type": "error",
-                "stage": "unconfigured",
-                "message": cfg_msg
-            })
-            return {
-                "investigation_status": "unconfigured",
-                "reason_for_stopping": "unconfigured",
-                "message": cfg_msg,
-                "response": cfg_msg,
-                "findings": [],
-                "evidence": [],
-                "tool_activity": [],
-                "runtime": 0.0,
-                "disclaimer": DISCLAIMER_TEXT
-            }
-
-        client = self.get_client()
-        if not GENAI_AVAILABLE or client is None:
-            logger.info("google-genai SDK not available in local environment. Activating analytical reasoning engine.")
-            use_fallback_reasoner = True
-
         # Initialize Session Privacy Vault (Zero-PII Decoupling)
         vault = PrivacyVault(session_id=session_id or f"sess_{int(time.time())}")
         privacy_token = set_active_privacy_vault(vault)
@@ -290,6 +324,12 @@ class DeclineAnalystAgent:
         sanitized_prompt = vault.tokenize_text(initial_prompt, source="user_prompt")
         if vault.audit_log:
             logger.info("Zero-PII Shield scrubbed %d entities from prompt", len(vault.audit_log))
+
+        log_lifecycle_event(
+            "ZERO_PII",
+            f"Zero-PII tokenization complete (entities scrubbed: {len(vault.audit_log)})",
+            {"session_id": session_id, "entities_count": len(vault.audit_log)}
+        )
 
         # Contextual prompt grounding when multi-turn history is provided
         prompt_with_context = sanitized_prompt
@@ -310,22 +350,40 @@ class DeclineAnalystAgent:
         # Hook into tool events for live streaming and activity aggregation
         def on_tool_event(ev: Dict[str, Any]):
             ev["agent"] = agent_display_name
+            ev["agent_name"] = agent_display_name
             t_type = ev.get("type")
+            tool_name = ev.get("tool", "")
 
             if t_type == "tool_start":
                 step_counter[0] += 1
                 ev["step"] = step_counter[0]
+                ev["max_steps"] = max_steps
+                if "action_text" not in ev:
+                    if tool_name == "run_sql":
+                        q_prev = str(ev.get("inputs", {}).get("query", "")).strip()[:100]
+                        ev["action_text"] = f"Running SQL query on transactions: {q_prev}..."
+                    elif tool_name == "lookup_response_code":
+                        ev["action_text"] = f"Looking up ISO 8583 response code '{ev.get('inputs', {}).get('code')}'..."
+                    elif tool_name == "get_baseline":
+                        ev["action_text"] = f"Computing baseline metrics for {ev.get('inputs', {}).get('metric')} vs {ev.get('inputs', {}).get('dimension')}..."
+                    elif tool_name == "draft_action":
+                        ev["action_text"] = "Drafting PM remediation action proposal..."
+                    else:
+                        ev["action_text"] = ev.get("message") or f"Executing tool: {tool_name}"
                 emit(ev)
 
             elif t_type in ("tool_end", "tool_error"):
                 ev["step"] = step_counter[0]
+                ev["max_steps"] = max_steps
+                if "action_text" not in ev:
+                    ev["action_text"] = ev.get("message") or f"Finished {tool_name}"
                 tool_activity.append({
                     "step": step_counter[0],
                     "tool": ev.get("tool"),
                     "inputs": ev.get("inputs"),
                     "output_summary": ev.get("output_summary"),
                     "execution_time_ms": ev.get("execution_time_ms", 0.0),
-                    "status": ev.get("status", "SUCCESS"),
+                    "status": "SUCCESS" if t_type == "tool_end" else "ERROR",
                     "error": ev.get("error"),
                     "timestamp": ev.get("timestamp")
                 })
@@ -335,6 +393,9 @@ class DeclineAnalystAgent:
                 f_data = ev.get("finding")
                 if f_data and f_data not in findings:
                     findings.append(f_data)
+                ev["step"] = step_counter[0]
+                ev["max_steps"] = max_steps
+                ev["action_text"] = "PM Remediation Action Proposal drafted"
                 emit(ev)
 
         token = set_tool_event_callback(on_tool_event)
@@ -344,70 +405,178 @@ class DeclineAnalystAgent:
             "type": "status",
             "stage": "thinking",
             "step": 1,
+            "max_steps": max_steps,
+            "action_text": f"{agent_display_name} formulating investigative hypothesis and analytical strategy...",
             "message": f"{agent_display_name} formulating investigative hypothesis and analytical strategy..."
         })
 
         final_text = ""
         stopped_reason = "completed"
+        active_engine = self.provider
 
         try:
-            if use_fallback_reasoner:
-                emit({
-                    "type": "status",
-                    "stage": "extracting_data",
-                    "step": 1,
-                    "message": "Initiating analytical investigation chain across transaction database..."
-                })
-                final_text = self._execute_analytical_fallback(
-                    prompt=prompt_with_context,
-                    vault=vault,
-                    findings=findings
-                )
-                stopped_reason = "completed"
-            else:
+            # Helper: Run Gemini
+            def _run_gemini():
+                client = self.get_client()
+                if not GENAI_AVAILABLE or client is None:
+                    raise RuntimeError("Google GenAI SDK is unavailable or GEMINI_API_KEY is not configured.")
                 config = types.GenerateContentConfig(
                     tools=self.get_tools(),
                     system_instruction=SYSTEM_INSTRUCTION,
                     temperature=0.2,
                 )
-
-                # Use client.chats.create for recommended Automatic Function Calling (AFC) in Chat.send_message
-                chat = client.chats.create(
-                    model=self.model_name,
-                    config=config
-                )
-
+                chat = client.chats.create(model=self.model_name, config=config)
                 emit({
                     "type": "status",
                     "stage": "extracting_data",
                     "step": 1,
+                    "max_steps": max_steps,
+                    "action_text": "Initiating tool execution chain across transaction database...",
                     "message": "Initiating tool execution chain across transaction database..."
                 })
-
-                # Execute conversational inquiry with sanitized prompt & contextual continuity (Zero-PII)
                 chat_response = chat.send_message(prompt_with_context)
-
                 emit({
                     "type": "status",
                     "stage": "synthesizing",
-                    "step": step_counter[0],
+                    "step": step_counter[0] or 1,
+                    "max_steps": max_steps,
+                    "action_text": "Synthesizing executive root-cause brief and remediation recommendations...",
                     "message": "Synthesizing executive root-cause brief and remediation recommendations..."
                 })
+                return getattr(chat_response, "text", "") or "Investigation completed."
 
-                final_text = getattr(chat_response, "text", "") or "Investigation completed."
-                stopped_reason = "agent_completed"
+            # Helper: Run OpenAI
+            def _run_openai():
+                if not self.openai_client.is_configured:
+                    raise RuntimeError("OPENAI_API_KEY is not configured.")
+                emit({
+                    "type": "status",
+                    "stage": "extracting_data",
+                    "step": 1,
+                    "max_steps": max_steps,
+                    "action_text": f"Initiating tool execution chain via OpenAI ({self.openai_model})...",
+                    "message": f"Initiating tool execution chain via OpenAI ({self.openai_model})..."
+                })
+                text, act = self.openai_client.execute_reasoning_loop(
+                    system_instruction=SYSTEM_INSTRUCTION,
+                    user_prompt=prompt_with_context,
+                    history=history,
+                    tool_executor=self.execute_tool,
+                    max_steps=max_steps,
+                    step_counter=step_counter,
+                    event_callback=emit,
+                    findings=findings
+                )
+                tool_activity.extend(act)
+                return text
+
+            # Helper: Run Autonomous Local SQL Fallback
+            def _run_fallback():
+                emit({
+                    "type": "status",
+                    "stage": "extracting_data",
+                    "step": 1,
+                    "max_steps": max_steps,
+                    "action_text": "Initiating autonomous analytical investigation chain across SQLite database...",
+                    "message": "Initiating autonomous analytical investigation chain across SQLite database..."
+                })
+                return self._execute_analytical_fallback(
+                    prompt=prompt_with_context,
+                    vault=vault,
+                    findings=findings
+                )
+
+            # Execution with Option 1: Primary + Automatic Failover
+            if active_engine == "gemini":
+                try:
+                    final_text = _run_gemini()
+                    stopped_reason = "agent_completed"
+                except Exception as gemini_err:
+                    err_msg = str(gemini_err)
+                    logger.warning("Gemini primary model failed: %s", err_msg)
+                    log_lifecycle_event("ERROR", f"Gemini primary failed: {err_msg}")
+                    if self.enable_failover:
+                        log_lifecycle_event("FAILOVER", "Initiating automatic failover to OpenAI ChatGPT (Option 1)")
+                        emit({
+                            "type": "status",
+                            "stage": "facing_error_retrying",
+                            "step": step_counter[0] or 1,
+                            "max_steps": max_steps,
+                            "action_text": "Primary AI provider experiencing load/timeout. Auto-failing over to OpenAI ChatGPT...",
+                            "message": "Primary AI provider experiencing load/timeout. Auto-failing over to OpenAI ChatGPT..."
+                        })
+                        try:
+                            final_text = _run_openai()
+                            stopped_reason = "failover_openai_completed"
+                        except Exception as openai_err:
+                            logger.warning("OpenAI failover also failed: %s", openai_err)
+                            log_lifecycle_event("FAILOVER", "OpenAI failed; engaging autonomous local SQL engine")
+                            emit({
+                                "type": "status",
+                                "stage": "facing_error_retrying",
+                                "step": step_counter[0] or 1,
+                                "max_steps": max_steps,
+                                "action_text": "Cloud AI APIs unavailable. Engaging autonomous local analytical engine...",
+                                "message": "Cloud AI APIs unavailable. Engaging autonomous local analytical engine..."
+                            })
+                            final_text = _run_fallback()
+                            stopped_reason = "failover_fallback_completed"
+                    else:
+                        raise
+
+            elif active_engine == "openai":
+                try:
+                    final_text = _run_openai()
+                    stopped_reason = "agent_completed"
+                except Exception as openai_err:
+                    err_msg = str(openai_err)
+                    logger.warning("OpenAI primary model failed: %s", err_msg)
+                    log_lifecycle_event("ERROR", f"OpenAI primary failed: {err_msg}")
+                    if self.enable_failover:
+                        log_lifecycle_event("FAILOVER", "Initiating automatic failover to Gemini")
+                        emit({
+                            "type": "status",
+                            "stage": "facing_error_retrying",
+                            "step": step_counter[0] or 1,
+                            "max_steps": max_steps,
+                            "action_text": "OpenAI experiencing load. Auto-failing over to Google Gemini...",
+                            "message": "OpenAI experiencing load. Auto-failing over to Google Gemini..."
+                        })
+                        try:
+                            final_text = _run_gemini()
+                            stopped_reason = "failover_gemini_completed"
+                        except Exception as gemini_err:
+                            logger.warning("Gemini failover also failed: %s", gemini_err)
+                            log_lifecycle_event("FAILOVER", "Engaging autonomous local SQL engine")
+                            emit({
+                                "type": "status",
+                                "stage": "facing_error_retrying",
+                                "step": step_counter[0] or 1,
+                                "max_steps": max_steps,
+                                "action_text": "Cloud AI APIs unavailable. Engaging autonomous local analytical engine...",
+                                "message": "Cloud AI APIs unavailable. Engaging autonomous local analytical engine..."
+                            })
+                            final_text = _run_fallback()
+                            stopped_reason = "failover_fallback_completed"
+                    else:
+                        raise
+
+            else:  # fallback
+                final_text = _run_fallback()
+                stopped_reason = "fallback_completed"
 
         except Exception as exc:
             err_str = str(exc)
-            logger.exception("Error during Gemini investigation chat: %s", err_str)
+            logger.exception("Error during decline agent execution: %s", err_str)
             stopped_reason = "error"
-            final_text = f"An error occurred during Gemini investigation: {err_str}"
+            final_text = f"An error occurred during payment decline investigation: {err_str}"
             emit({
                 "type": "tool_error",
                 "stage": "facing_error_retrying",
                 "status": "ERROR",
                 "error": err_str,
-                "message": f"Encountered error during Gemini session: {err_str}"
+                "action_text": f"Encountered error during session: {err_str}",
+                "message": f"Encountered error during session: {err_str}"
             })
         finally:
             reset_tool_event_callback(token)
@@ -419,9 +588,16 @@ class DeclineAnalystAgent:
 
         elapsed_total = round(time.time() - start_time, 2)
 
+        log_lifecycle_event(
+            "LLM_RESPONSE",
+            f"Investigation completed in {elapsed_total}s across {step_counter[0]} tool execution steps (Status: {stopped_reason})",
+            {"runtime_seconds": elapsed_total, "steps": step_counter[0], "status": stopped_reason}
+        )
+
         emit({
             "type": "completed",
             "stage": "completed",
+            "action_text": f"Investigation complete in {elapsed_total}s across {step_counter[0]} tool execution steps.",
             "message": f"Investigation complete in {elapsed_total}s across {step_counter[0]} tool execution steps.",
             "response": rehydrated_text,
             "sanitized_response": final_text,
@@ -434,7 +610,7 @@ class DeclineAnalystAgent:
         })
 
         return {
-            "investigation_status": "completed" if stopped_reason in ("agent_completed", "completed") else stopped_reason,
+            "investigation_status": "completed" if stopped_reason in ("agent_completed", "completed", "failover_openai_completed", "failover_gemini_completed", "failover_fallback_completed") else stopped_reason,
             "reason_for_stopping": stopped_reason,
             "response": rehydrated_text,
             "sanitized_response": final_text,
@@ -442,11 +618,12 @@ class DeclineAnalystAgent:
             "privacy_audit": privacy_summary,
             "zero_pii_decoupled": True,
             "findings": findings,
-            "evidence": [],
+            "evidence": tool_activity,
             "tool_activity": tool_activity,
             "steps_executed": step_counter[0],
             "max_steps": max_steps,
             "runtime": elapsed_total,
+            "active_provider": self.provider,
             "disclaimer": DISCLAIMER_TEXT
         }
 

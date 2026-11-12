@@ -25,11 +25,29 @@
         </div>
       </div>
       <div class="header-status">
-        <!-- Model Versioning Parameter (Customizable per Agent) -->
-        <div class="model-picker-wrapper">
-          <label for="model-version-input">Model:</label>
-          <input type="text" id="model-version-input" value="gemini-3.8-flash" placeholder="gemini-3.8-flash" />
-          <button type="button" id="model-update-btn" class="btn btn-sm btn-outline-primary" title="Update active Gemini model version">Set</button>
+        <!-- Admin Multi-Model Selector & Resiliency Controls -->
+        <div class="model-picker-wrapper" style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Model:</span>
+          <select id="model-provider-select" style="font-size: 0.76rem; padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; background: #fff; font-weight: 500;">
+            <optgroup label="Google Gemini">
+              <option value="gemini:gemini-3.8-flash">Gemini 3.8 Flash (Default)</option>
+              <option value="gemini:gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="gemini:gemini-1.5-pro">Gemini 1.5 Pro</option>
+            </optgroup>
+            <optgroup label="OpenAI ChatGPT">
+              <option value="openai:gpt-4o-mini">ChatGPT (GPT-4o-mini)</option>
+              <option value="openai:gpt-4o">ChatGPT (GPT-4o)</option>
+            </optgroup>
+            <optgroup label="Offline / High Availability">
+              <option value="fallback:local-analytical-engine">Autonomous SQL Engine</option>
+            </optgroup>
+          </select>
+          <button type="button" id="failover-toggle-btn" class="btn btn-xs" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600;" title="Automatic Failover across models if one fails or times out">
+            ⚡ Failover: ON
+          </button>
+          <button type="button" id="view-system-logs-btn" class="btn btn-xs btn-outline-secondary" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); background: #fff; font-weight: 600; cursor: pointer;" title="View real-time Slack and LLM request logs">
+            📋 Logs
+          </button>
         </div>
         <span class="status-indicator" id="agent-status-badge">
           <span class="status-dot"></span>
@@ -1145,6 +1163,30 @@
         <span>Demo using synthetic data. Recommendations are not executed.</span>
       </div>
     </footer>
+  </div>
+
+  <!-- Live System & Request Logs Modal -->
+  <div id="system-logs-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 9999; backdrop-filter: blur(4px); align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 92%; max-width: 900px; max-height: 85vh; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color);">
+      <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+        <div>
+          <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <span>📋</span> Real-Time System & Request Logs
+          </h3>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 2px 0 0 0;">
+            Live audit of Slack/Teams ingress, LLM calls (Gemini/OpenAI), tool roundtrips, and failovers. Streams to Render/Better Stack stdout.
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="refresh-logs-btn" class="btn btn-sm btn-outline-primary" style="font-size: 0.76rem; padding: 4px 10px;">🔄 Refresh</button>
+          <button id="clear-logs-btn" class="btn btn-sm btn-outline-secondary" style="font-size: 0.76rem; padding: 4px 10px;">Clear</button>
+          <button id="close-logs-modal-btn" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 4px 8px;">&times;</button>
+        </div>
+      </div>
+      <div id="system-logs-content" style="flex: 1; overflow-y: auto; padding: 16px; background: #0f172a; color: #f8fafc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; line-height: 1.55; white-space: pre-wrap;">
+Loading logs...
+      </div>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>

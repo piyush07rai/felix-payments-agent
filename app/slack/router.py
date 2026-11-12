@@ -28,6 +28,7 @@ except ImportError:
     Field = lambda *args, **kwargs: None
     FASTAPI_AVAILABLE = False
 
+from app.audit_logging import log_lifecycle_event
 from app.config import settings
 from app.slack.client import SENT_SLACK_MESSAGES, slack_client
 from app.slack.security import slack_deduplicator, verify_slack_signature
@@ -110,6 +111,11 @@ async def handle_slack_events(
         return {"ok": True, "ignored": "bot_message"}
 
     if event_type in ("app_mention", "message"):
+        log_lifecycle_event(
+            "SLACK_INGRESS",
+            f"Queued background processing for Slack {event_type}",
+            {"user": event_data.get("user"), "channel": event_data.get("channel")}
+        )
         # Schedule asynchronous processing to guarantee immediate HTTP 200 response
         background_tasks.add_task(slack_service.handle_mention_event, payload)
 

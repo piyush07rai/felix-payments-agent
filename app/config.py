@@ -33,6 +33,15 @@ try:
         GEMINI_API_KEY: str = ""
         GEMINI_MODEL: str = "gemini-3.8-flash"
 
+        # OpenAI ChatGPT Configuration
+        OPENAI_API_KEY: str = ""
+        OPENAI_MODEL: str = "gpt-4o-mini"
+
+        # Multi-Model Routing & Resiliency
+        ACTIVE_PROVIDER: str = "gemini"  # "gemini" | "openai" | "fallback"
+        ENABLE_AUTO_FAILOVER: bool = True
+        LLM_TIMEOUT_SECONDS: float = 18.0
+
         # Database Configuration
         DATABASE_PATH: str = str(BASE_DIR / "data" / "declines.db")
 
@@ -74,6 +83,12 @@ except ImportError:
 
         GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
         GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+
+        OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+        OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        ACTIVE_PROVIDER: str = os.getenv("ACTIVE_PROVIDER", "gemini")
+        ENABLE_AUTO_FAILOVER: bool = os.getenv("ENABLE_AUTO_FAILOVER", "true").lower() in ("true", "1", "yes")
+        LLM_TIMEOUT_SECONDS: float = float(os.getenv("LLM_TIMEOUT_SECONDS", "18.0"))
 
         DATABASE_PATH: str = os.getenv("DATABASE_PATH", str(BASE_DIR / "data" / "declines.db"))
 

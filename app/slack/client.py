@@ -74,6 +74,20 @@ class SlackClient:
 
         return self._send_api_request("chat.update", payload)
 
+    def add_reaction(
+        self,
+        channel: str,
+        timestamp: str,
+        name: str = "eyes",
+    ) -> Dict[str, Any]:
+        """Add an emoji reaction (e.g. :eyes:) to acknowledge message receipt instantly."""
+        payload: Dict[str, Any] = {
+            "channel": channel,
+            "timestamp": timestamp,
+            "name": name,
+        }
+        return self._send_api_request("reactions.add", payload)
+
     def _send_api_request(self, endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Execute HTTP request to Slack Web API or record in simulation buffer."""
         # Record into memory buffer for auditing/testing
