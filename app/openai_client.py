@@ -318,6 +318,7 @@ class OpenAIAnalystClient:
                         k: (v if k not in ("rows", "groups") else f"[{len(v)} items]")
                         for k, v in tool_result.items()
                     },
+                    "raw_result": tool_result,
                     "execution_time_ms": tool_elapsed_ms,
                     "status": "ERROR" if tool_error else "SUCCESS",
                     "error": tool_error,
@@ -355,6 +356,26 @@ class OpenAIAnalystClient:
                     "tool_call_id": call_id,
                     "content": json.dumps(tool_result)
                 })
+
+        if not final_text:
+            # Request explicit synthesis turn using gathered tool evidence
+            try:
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "You have completed all tool queries. Now provide a comprehensive, actionable Executive Analysis for the Payments PM: "
+                        "1. Executive Summary: Clearly state what happened and which cohorts are failing. "
+                        "2. Metrics & Evidence: Show specific baseline approval rates, decline drops, and transaction volumes from your query results. "
+                        "3. Root Cause Diagnosis: Classify the failure (e.g. Issuer technical, Acquirer, Business decline) and explain why. "
+                        "4. Recommended Actions: Give prioritized remediation steps and playbooks."
+                    )
+                })
+                synth_resp = self._call_chat_api(messages=messages, tools=None, timeout=settings.LLM_TIMEOUT_SECONDS)
+                s_choices = synth_resp.get("choices") or []
+                if s_choices:
+                    final_text = (s_choices[0].get("message", {}).get("content", "") or "").strip()
+            except Exception as s_err:
+                logger.warning("Error in OpenAI synthesis turn: %s", s_err)
 
         if not final_text and choices:
             final_text = choices[0].get("message", {}).get("content", "") or "Analysis complete."

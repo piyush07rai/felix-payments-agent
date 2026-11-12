@@ -76,7 +76,30 @@ class TestMultiModelAndFailover(unittest.TestCase):
         # Investigation must succeed via failover rather than crashing
         self.assertIn(result["investigation_status"], ("completed", "failover_fallback_completed"))
         self.assertTrue(len(result["response"]) > 0)
+        self.assertNotEqual(result["response"].strip().lower(), "investigation completed.")
+        self.assertIn("HDFC Bank", result["response"])
         self.assertTrue(any(ev.get("stage") == "failover" or "facing_error" in str(ev.get("stage")) for ev in events_emitted))
+
+    def test_synthesize_analysis_from_tool_data(self):
+        """Verify that synthesizing analysis from tool activity generates full executive brief."""
+        from app.tools import get_baseline, lookup_response_code
+        agent = DeclineAnalystAgent(api_key="", openai_key="", enable_failover=True)
+        tool_activity = [
+            {"tool": "get_baseline", "raw_result": get_baseline("approval_rate", "issuer_bank")},
+            {"tool": "lookup_response_code", "raw_result": lookup_response_code("91")}
+        ]
+        findings = []
+        resp = agent._synthesize_analysis_from_tool_data(
+            prompt="Find issuer-specific approval issues.",
+            tool_activity=tool_activity,
+            findings=findings
+        )
+        self.assertNotIn("investigation completed", resp.lower())
+        self.assertIn("### Executive Summary", resp)
+        self.assertIn("### Key Evidence & Dimensional Baselines", resp)
+        self.assertIn("### Root Cause Diagnosis", resp)
+        self.assertIn("### Recommended Remediation Playbooks", resp)
+        self.assertIn("HDFC Bank", resp)
 
 
 if __name__ == "__main__":

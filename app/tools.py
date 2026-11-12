@@ -193,6 +193,7 @@ def _log_tool_execution(
             "inputs": inputs,
             "execution_time_ms": round(execution_time_ms, 2),
             "output_summary": record["output_summary"],
+            "raw_result": output,
             "message": f"Completed {tool_name} successfully in {round(execution_time_ms, 1)}ms."
         })
     else:
