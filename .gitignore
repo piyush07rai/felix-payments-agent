@@ -1,0 +1,34 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Data and SQLite
+*.db
+*.sqlite
+*.sqlite3
+data/*.csv
+data/*.xlsx
+data/*.json
+!data/ground_truth.json
+data/*.db
+data/*.sqlite
+!data/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# OS / Editor files
+.DS_Store
+.idea/
+.vscode/

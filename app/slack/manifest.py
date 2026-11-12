@@ -1,0 +1,46 @@
+"""Official Slack App Manifest for Felix.
+
+Can be pasted directly into https://api.slack.com/apps -> Create New App -> From an app manifest.
+"""
+
+SLACK_APP_MANIFEST = {
+    "_metadata": {
+        "major_version": 1,
+        "minor_version": 1
+    },
+    "display_information": {
+        "name": "Felix",
+        "description": "Enterprise AI Assistant for Payments Decline and Authorization Analytics",
+        "background_color": "#1e293b",
+        "long_description": "Felix is an enterprise AI assistant for payments product managers and operations teams. Mention @Felix in team channels to investigate authorization drops, calculate dimensional baseline metrics, and draft actionable remediation playbooks."
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Felix",
+            "always_online": True
+        }
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "app_mentions:read",
+                "chat:write",
+                "channels:history",
+                "groups:history",
+                "im:history"
+            ]
+        }
+    },
+    "settings": {
+        "event_subscriptions": {
+            "request_url": "https://your-domain.com/api/slack/events",
+            "bot_events": [
+                "app_mention",
+                "message.im"
+            ]
+        },
+        "org_deploy_enabled": False,
+        "socket_mode_enabled": False,
+        "token_rotation_enabled": False
+    }
+}

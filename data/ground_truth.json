@@ -1,0 +1,36 @@
+{
+  "dataset_metadata": {
+    "row_count": 50000,
+    "random_seed": 42,
+    "generation_timestamp": "2026-11-08T21:08:06.069488Z"
+  },
+  "anomalies": [
+    {
+      "id": "ANOMALY_1",
+      "title": "Issuer Technical Failure",
+      "dimension": "network, issuer_bank, ts",
+      "dimension_value": "Visa | ICICI Bank | Sunday 14:00-16:00",
+      "cause_category": "Technical Decline",
+      "primary_code": "91",
+      "recommended_action": "Route transactions through alternative network if possible, alert ICICI IT infrastructure team regarding weekend downtime."
+    },
+    {
+      "id": "ANOMALY_2",
+      "title": "Payment Aggregator 3DS Timeout",
+      "dimension": "channel, pa_id",
+      "dimension_value": "ECOM | PA_03",
+      "cause_category": "Gateway / 3DS Timeout",
+      "primary_code": "96",
+      "recommended_action": "Failover ECOM traffic from PA_03 to redundant aggregators (e.g., PA_01). Investigate PA_03 3DS integration."
+    },
+    {
+      "id": "ANOMALY_3",
+      "title": "Business Decline (High Value Electronics)",
+      "dimension": "network, mcc, amount",
+      "dimension_value": "RuPay | MCC 5732 | Amount > 25,000",
+      "cause_category": "Business / Insufficient Funds",
+      "primary_code": "51",
+      "recommended_action": "Not a technical fault. Offer EMI or Buy-Now-Pay-Later options at checkout for high cart values."
+    }
+  ]
+}

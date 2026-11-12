@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments Decline Analyst Agent | PM Portfolio</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Payments Decline Analyst Agent</h1>
+          <p class="brand-subtitle">Product Manager Portfolio &bull; AI Agent for Payment Authorization Drops</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <!-- Model Versioning Parameter (Customizable per Agent) -->
+        <div class="model-picker-wrapper">
+          <label for="model-version-input">Model:</label>
+          <input type="text" id="model-version-input" value="gemini-3.8-flash" placeholder="gemini-3.8-flash" />
+          <button type="button" id="model-update-btn" class="btn btn-sm btn-outline-primary" title="Update active Gemini model version">Set</button>
+        </div>
+        <span class="status-indicator" id="agent-status-badge">
+          <span class="status-dot"></span>
+          <span id="agent-status-text">Checking Agent...</span>
+        </span>
+        <span class="status-indicator secondary" id="data-status-badge">
+          <span class="status-dot neutral"></span>
+          <span id="data-status-text">Data: Checking...</span>
+        </span>
+        <span class="status-indicator shield-indicator" id="privacy-shield-badge" title="Enterprise Zero-PII Decoupling Active">
+          <span class="status-dot green"></span>
+          <span id="privacy-shield-text">Shield: Zero-PII Active</span>
+        </span>
+        <!-- Role-Based Access Control Switcher (Phase 6) -->
+        <div class="role-picker-wrapper" style="display: flex; align-items: center; gap: 6px; background: #f1f5f9; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Role:</span>
+          <select id="user-role-selector" style="font-size: 0.75rem; font-weight: 600; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; color: var(--text-primary); cursor: pointer;" title="Toggle between Administrator and Standard User">
+            <option value="admin">Organisation Administrator</option>
+            <option value="user">Standard User</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-tab="overview" role="tab" aria-selected="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        Overview
+      </button>
+      <button class="nav-tab" data-tab="investigation" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        AI Investigation
+      </button>
+      <button class="nav-tab" data-tab="findings" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Findings
+      </button>
+      <button class="nav-tab" data-tab="evaluation" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        Evaluation
+      </button>
+      <button class="nav-tab" data-tab="privacy" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        Zero-PII Shield
+      </button>
+      <button class="nav-tab" data-tab="integrations" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"></path>
+          <path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4"></path>
+          <circle cx="8" cy="12" r="2"></circle>
+          <circle cx="20" cy="12" r="2"></circle>
+        </svg>
+        Enterprise Integrations
+      </button>
+    </nav>
+
+    <!-- Main Content Panes -->
+    <main class="tab-content-container">
+      
+      <!-- ==========================================
+           1. OVERVIEW SECTION
+           ========================================== -->
+      <section id="tab-overview" class="tab-pane active" role="tabpanel">
+        <div class="content-header">
+          <h2>Portfolio Overview & Real Analytics</h2>
+          <p class="section-desc">Live payment authorization metrics, decline trends, and transaction ingestion pipeline.</p>
+        </div>
+
+        <!-- Missing Dataset Notice -->
+        <div id="overview-no-data-notice" class="empty-state-card" style="display: none;">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <h3>No transaction dataset loaded. Upload a CSV file to begin.</h3>
+          <p>Once you upload <code>transactions.csv</code> below, actual authorization rates, decline breakdowns, and trend charts will compute automatically.</p>
+        </div>
+
+        <!-- Live KPI Metrics -->
+        <div id="overview-metrics-grid" class="kpi-grid" style="display: none;">
+          <div class="kpi-card">
+            <span class="kpi-label">Total Transactions</span>
+            <span class="kpi-value" id="kpi-total-txns">-</span>
+            <span class="kpi-sub">Actual loaded records</span>
+          </div>
+          <div class="kpi-card success-card">
+            <span class="kpi-label">Approval Rate</span>
+            <span class="kpi-value text-success" id="kpi-approval-rate">-%</span>
+            <span class="kpi-sub">Response code '00'</span>
+          </div>
+          <div class="kpi-card danger-card">
+            <span class="kpi-label">Decline Rate</span>
+            <span class="kpi-value text-danger" id="kpi-decline-rate">-%</span>
+            <span class="kpi-sub">Non-zero response codes</span>
+          </div>
+          <div class="kpi-card warning-card">
+            <span class="kpi-label">Technical Failure Rate</span>
+            <span class="kpi-value text-warning" id="kpi-technical-rate">-%</span>
+            <span class="kpi-sub">Codes 91, 96 (switch/gateway)</span>
+          </div>
+          <div class="kpi-card info-card">
+            <span class="kpi-label">Business Decline Rate</span>
+            <span class="kpi-value text-info" id="kpi-business-rate">-%</span>
+            <span class="kpi-sub">Codes 51, 05 (funds/rules)</span>
+          </div>
+        </div>
+
+        <!-- Live Analytics Charts -->
+        <div id="overview-charts-grid" class="charts-grid" style="display: none;">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Approval Rate Over Time</h3>
+              <span class="chart-badge">Timeline</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-approval-time"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Response-Code Distribution</h3>
+              <span class="chart-badge">ISO 8583</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-response-codes"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Approval Rate by Network</h3>
+              <span class="chart-badge">Card Brand</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-approval-network"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Approval Rate by Channel</h3>
+              <span class="chart-badge">Payment Channel</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-approval-channel"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- CSV Dataset Upload Card -->
+        <div class="card upload-section-card" style="margin-top: 24px;">
+          <div class="upload-section-header">
+            <div>
+              <h3 class="card-title">Dataset Upload & Ingestion</h3>
+              <p class="card-text">Upload a transaction CSV file (~50,000 records). Validates schema, timestamps, and data types before loading into SQLite.</p>
+            </div>
+          </div>
+
+          <form id="csv-upload-form" class="upload-form">
+            <div class="upload-dropzone" id="dropzone">
+              <input type="file" id="csv-file-input" accept=".csv" class="file-input-hidden" />
+              <div class="dropzone-content">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="upload-icon">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <div class="dropzone-text">
+                  <span class="dropzone-prompt"><strong>Click to select</strong> or drag and drop transaction CSV</span>
+                  <span class="dropzone-sub">Only valid CSV files with expected payment schemas are accepted</span>
+                </div>
+                <div id="selected-file-name" class="selected-file-badge" style="display: none;"></div>
+              </div>
+            </div>
+
+            <div class="upload-controls">
+              <div class="upload-options">
+                <label class="checkbox-label" title="When unchecked, new transactions are appended and existing records are preserved (Financial Immutability). Check only when preparing a brand-new demo.">
+                  <input type="checkbox" id="replace-dataset-checkbox" />
+                  <span>Reset database before loading (Demo Environment Reset)</span>
+                </label>
+                <span class="upload-mode-badge badge-append" id="upload-mode-indicator">Mode: Append-Only (Financial Integrity)</span>
+              </div>
+              <div class="upload-actions">
+                <button type="submit" id="upload-btn" class="btn btn-primary" disabled>
+                  <span id="upload-btn-text">Upload & Validate CSV</span>
+                </button>
+                <button type="button" id="clear-db-btn" class="btn btn-secondary" style="display: none;" title="Reset transaction database to prepare for a fresh demo presentation">
+                  Clear Dataset for Next Demo
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Upload Alerts -->
+          <div id="upload-alert-success" class="alert-box alert-success" style="display: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span id="upload-success-text"></span>
+          </div>
+
+          <div id="upload-alert-error" class="alert-box alert-error" style="display: none;">
+            <div class="alert-error-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span id="upload-error-summary">Validation errors encountered:</span>
+            </div>
+            <ul id="upload-error-list" class="error-list"></ul>
+          </div>
+
+          <!-- Enterprise Messaging Channels Status -->
+          <div class="card" style="margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h3 class="card-title" style="margin-bottom: 2px;">Connected Enterprise Channels</h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0;">Multi-platform messaging integration connecting Slack and external platforms to Felix.</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <a href="/api/slack/manifest" target="_blank" class="btn btn-sm btn-outline-primary" title="View official Slack App Manifest JSON">Slack Manifest</a>
+                <a href="/api/teams/manifest" target="_blank" class="btn btn-sm btn-outline-primary" title="View official Microsoft Teams Manifest JSON">Teams Manifest</a>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 8px;">
+              <div style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: #f8fafc;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; font-size: 0.85rem;">Slack App (@Felix)</span>
+                  <span class="tag-detected" style="font-size: 0.7rem;">Active</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Webhook: <code>/api/slack/events</code></div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Supports @Felix mentions, threads, Block Kit</div>
+              </div>
+              <div style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: #f8fafc;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; font-size: 0.85rem;">Microsoft Teams (@Felix)</span>
+                  <span class="tag-detected" style="font-size: 0.7rem;">Active</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Endpoint: <code>/api/teams/messages</code></div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Supports @Felix mentions, threads, Adaptive Cards 1.5</div>
+              </div>
+              <div style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: #f8fafc;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; font-size: 0.85rem;">Common API Ingress</span>
+                  <span class="tag-detected" style="font-size: 0.7rem;">Active</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Endpoint: <code>/api/integration/message</code></div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Multi-tenant isolated sessions &amp; Zero-PII</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- ==========================================
+           2. AI INVESTIGATION SECTION
+           ========================================== -->
+      <section id="tab-investigation" class="tab-pane" role="tabpanel">
+        <div class="content-header">
+          <h2>AI Decline Investigation & Agent Console</h2>
+          <p class="section-desc">Interactive Gemini investigation copilot. Formulates hypotheses, executes read-only SQL tools, and uncovers root causes.</p>
+        </div>
+
+        <!-- Missing Data Notice Banner -->
+        <div id="investigation-no-data-banner" class="alert-box alert-warning" style="display: none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div>
+            <strong>No transaction dataset loaded. Upload a CSV file to begin.</strong>
+            <p style="font-size: 0.85rem; margin-top: 2px;">Switch to the Overview tab to upload <code>transactions.csv</code> before starting an investigation.</p>
+          </div>
+        </div>
+
+        <div class="investigation-layout">
+          <!-- Left Column: Chat & Prompt Interface -->
+          <div class="chat-column">
+            <!-- Example Question Chips -->
+            <div class="prompt-chips-container">
+              <span class="chips-label">Quick Prompts:</span>
+              <div class="prompt-chips">
+                <button class="chip-btn" data-prompt="Investigate the biggest decline anomalies.">Biggest decline anomalies</button>
+                <button class="chip-btn" data-prompt="Why is response code 91 increasing?">Why is response code 91 increasing?</button>
+                <button class="chip-btn" data-prompt="Find issuer-specific approval issues.">Issuer-specific approval issues</button>
+                <button class="chip-btn" data-prompt="Investigate 3DS timeouts.">Investigate 3DS timeouts</button>
+                <button class="chip-btn" data-prompt="Investigate high-value RuPay electronics declines.">RuPay electronics declines</button>
+                <button class="chip-btn" data-prompt="Recommend actions to improve approval rates.">Recommend approval actions</button>
+              </div>
+            </div>
+
+            <!-- Chat Stream Card -->
+            <div class="card chat-card">
+              <div class="chat-card-header">
+                <h3 class="card-title" style="margin-bottom: 0;">Investigation Dialogue</h3>
+                <button id="run-autonomous-btn" class="btn btn-outline-primary btn-sm">
+                  Run Full Autonomous Audit
+                </button>
+              </div>
+
+              <div id="chat-stream" class="chat-stream">
+                <div class="chat-message assistant-message">
+                  <div class="message-sender">
+                    <span class="sender-avatar">AI</span>
+                    <span>Decline Analyst Agent</span>
+                  </div>
+                  <div class="message-body">
+                    <p>Hello! I am your AI Payments Decline Analyst. I can query our transactions database, calculate dimensional baselines, analyze ISO response codes, and draft remediation plans.</p>
+                    <p style="margin-top: 8px;">Select a prompt above or ask a custom question below to start.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input Form -->
+              <form id="chat-form" class="chat-form">
+                <div class="chat-input-wrapper">
+                  <textarea id="chat-input" rows="2" placeholder="Ask about authorization drops, decline codes, or issuer issues..." required></textarea>
+                  <button type="submit" id="chat-submit-btn" class="btn btn-primary chat-submit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Send
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right Column: Live Agent Execution Activity -->
+          <div class="activity-column">
+            <div class="card activity-card">
+              <div class="activity-header">
+                <div>
+                  <h3 class="card-title" style="margin-bottom: 2px;">Agent Execution Events</h3>
+                  <p class="section-desc" style="font-size: 0.8rem;">Live tool calls, SQL queries, and reasoning steps.</p>
+                </div>
+                <span class="badge-tag" id="activity-counter">0 events</span>
+              </div>
+
+              <!-- Live Chain & Agent Progress Banner -->
+              <div id="live-agent-banner" class="live-agent-banner" style="display: none;">
+                <div class="agent-pulse-dot"></div>
+                <div class="agent-banner-info">
+                  <div class="agent-banner-top">
+                    <span class="agent-name-tag" id="live-agent-name">Gemini 3.8 Flash Analyst</span>
+                    <span class="chain-step-tag" id="live-chain-step">Step 1/15</span>
+                  </div>
+                  <div class="agent-action-text" id="live-action-text">Formulating investigation strategy...</div>
+                </div>
+                <span class="stage-pill stage-thinking" id="live-stage-pill">THINKING</span>
+              </div>
+
+              <div id="agent-activity-stream" class="activity-stream">
+                <div class="empty-activity-placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                  <p>Tool calls (<code>run_sql</code>, <code>get_baseline</code>, <code>lookup_response_code</code>, <code>draft_action</code>) will appear here in real-time as the agent investigates.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- ==========================================
+           3. FINDINGS SECTION
+           ========================================== -->
+      <section id="tab-findings" class="tab-pane" role="tabpanel">
+        <div class="content-header">
+          <h2>Investigation Findings & Remediation Playbooks</h2>
+          <p class="section-desc">Evidence-supported decline anomalies, root causes, and drafted PM recommendations with estimated uplifts.</p>
+        </div>
+
+        <!-- Empty State for Findings -->
+        <div id="findings-empty-state" class="empty-state-card">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <h3>No Active Investigation Findings</h3>
+          <p>Run an investigation from the <strong>AI Investigation</strong> tab. When the agent identifies anomalies and invokes <code>draft_action</code>, structured finding cards will populate here.</p>
+          <div style="margin-top: 16px;">
+            <button id="go-to-investigate-btn" class="btn btn-primary">Go to AI Investigation</button>
+          </div>
+        </div>
+
+        <!-- Populated Findings Container -->
+        <div id="findings-container" class="findings-grid" style="display: none;"></div>
+
+        <!-- Human Approval Framework Governance Card (Phase 6) -->
+        <div class="card" style="margin-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h3 class="card-title" style="margin-bottom: 2px;">Human Approval Framework & Action Governance</h3>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0;">
+                Felix investigates and drafts recommendations with estimated uplifts, but <strong>never modifies production payment infrastructure directly</strong>. Explicit Human-in-the-Loop approval by an Organisation Administrator is required.
+              </p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-proposals-btn">Refresh Proposals</button>
+          </div>
+
+          <div id="action-proposals-list" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem; border: 1px dashed var(--border-color); border-radius: var(--radius-sm);">
+              No action proposals recorded yet. Run an investigation to generate actionable recommendations.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           4. EVALUATION SECTION
+           ========================================== -->
+      <section id="tab-evaluation" class="tab-pane" role="tabpanel">
+        <div class="content-header">
+          <h2>Agent Evaluation & Ground Truth Benchmarking</h2>
+          <p class="section-desc">Quantitative precision, recall, and detection benchmarking comparing actual agent findings against verified ground truth.</p>
+        </div>
+
+        <!-- Ground Truth Upload Card -->
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="upload-section-header">
+            <div>
+              <h3 class="card-title">Ground Truth Upload (Strictly Isolated)</h3>
+              <p class="card-text">Upload <code>ground_truth.json</code>. The AI agent never reads or sees this file during investigation; it is exclusively used by the evaluation harness.</p>
+            </div>
+          </div>
+
+          <form id="gt-upload-form" class="upload-form">
+            <div class="upload-controls">
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="gt-file-input" accept=".json" class="btn btn-secondary" style="cursor: pointer;" />
+                <button type="submit" id="gt-upload-btn" class="btn btn-primary" disabled>Upload Ground Truth</button>
+              </div>
+              <div id="gt-status-badge" class="badge-tag">Checking Ground Truth...</div>
+            </div>
+          </form>
+
+          <div id="gt-alert-success" class="alert-box alert-success" style="display: none; margin-top: 12px;">
+            <span id="gt-success-text"></span>
+          </div>
+          <div id="gt-alert-error" class="alert-box alert-error" style="display: none; margin-top: 12px;">
+            <span id="gt-error-text"></span>
+          </div>
+        </div>
+
+        <!-- Missing Ground Truth Empty State -->
+        <div id="eval-missing-notice" class="empty-state-card" style="display: none;">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <h3>Evaluation unavailable. Upload the ground-truth file to evaluate the investigation.</h3>
+          <p>Once you upload <code>data/ground_truth.json</code> above, click "Evaluate Investigation" to benchmark the agent's diagnostic precision and recall.</p>
+        </div>
+
+        <!-- Evaluation Action Bar -->
+        <div id="eval-action-bar" class="card" style="margin-bottom: 24px; display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 class="card-title" style="margin-bottom: 2px;">Evaluate Latest Investigation</h3>
+              <p class="section-desc" style="font-size: 0.85rem;">Benchmarks the agent's findings against the uploaded ground-truth issues.</p>
+            </div>
+            <button id="run-eval-btn" class="btn btn-primary">
+              Run Evaluation Benchmark
+            </button>
+          </div>
+        </div>
+
+        <!-- Evaluation Results Scorecard -->
+        <div id="eval-results-container" style="display: none;">
+          <div class="kpi-grid">
+            <div class="kpi-card success-card">
+              <span class="kpi-label">Detection Rate</span>
+              <span class="kpi-value text-success" id="eval-detection-rate">-%</span>
+              <span class="kpi-sub">Ground truth issues found</span>
+            </div>
+            <div class="kpi-card info-card">
+              <span class="kpi-label">Precision</span>
+              <span class="kpi-value text-info" id="eval-precision">-%</span>
+              <span class="kpi-sub">Valid reported anomalies</span>
+            </div>
+            <div class="kpi-card success-card">
+              <span class="kpi-label">Recall</span>
+              <span class="kpi-value text-success" id="eval-recall">-%</span>
+              <span class="kpi-sub">Coverage of verified issues</span>
+            </div>
+            <div class="kpi-card warning-card">
+              <span class="kpi-label">False Positives</span>
+              <span class="kpi-value text-warning" id="eval-false-positives">-</span>
+              <span class="kpi-sub">Unmatched findings</span>
+            </div>
+          </div>
+
+          <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div class="kpi-card">
+              <span class="kpi-label">Investigation Runtime</span>
+              <span class="kpi-value" id="eval-runtime">-s</span>
+              <span class="kpi-sub">Total execution time</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">SQL Queries</span>
+              <span class="kpi-value" id="eval-sql-count">-</span>
+              <span class="kpi-sub">Actual run_sql queries</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Agent Steps</span>
+              <span class="kpi-value" id="eval-steps">-</span>
+              <span class="kpi-sub">Max 15 reasoning turns</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Estimated Cost</span>
+              <span class="kpi-value" id="eval-cost">$0.00</span>
+              <span class="kpi-sub">Gemini 3.8 Flash tokens</span>
+            </div>
+          </div>
+
+          <!-- Ground Truth Issue Match Table -->
+          <div class="card" style="margin-top: 24px;">
+            <h3 class="card-title">Ground Truth Issue Verification Matrix</h3>
+            <div class="table-responsive" style="overflow-x: auto; margin-top: 12px;">
+              <table class="data-table" id="eval-matrix-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead>
+                  <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                    <th style="padding: 10px;">ID</th>
+                    <th style="padding: 10px;">Ground Truth Anomaly</th>
+                    <th style="padding: 10px;">Dimension</th>
+                    <th style="padding: 10px;">Category</th>
+                    <th style="padding: 10px;">Detection Status</th>
+                  </tr>
+                </thead>
+                <tbody id="eval-matrix-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- ==========================================
+           5. ZERO-PII SHIELD & DECOUPLING SECTION
+           ========================================== -->
+      <section id="tab-privacy" class="tab-pane" role="tabpanel">
+        <div class="content-header">
+          <h2>Zero-PII Privacy & Decoupling Shield</h2>
+          <p class="section-desc">Reversible surrogate tokenization and local rehydration vault. The AI model never reads or accesses customer PII or payment secrets.</p>
+        </div>
+
+        <!-- Privacy Shield KPI Cards -->
+        <div class="kpi-grid" style="margin-bottom: 24px;">
+          <div class="kpi-card" style="border-left: 4px solid #10b981;">
+            <span class="kpi-label">Shield Enforcement</span>
+            <span class="kpi-value" style="color: #10b981; font-size: 1.35rem;">ACTIVE & ENFORCED</span>
+            <span class="kpi-sub">Local VPC Vault Active</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Deny-List Columns</span>
+            <span class="kpi-value" id="privacy-deny-count">17 Columns</span>
+            <span class="kpi-sub">Strictly blocked (CVV, Passwords, PINs)</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Entities Scrubbed</span>
+            <span class="kpi-value" id="privacy-total-scrubbed">0</span>
+            <span class="kpi-sub">Surrogate tokens allocated</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Decoupling Overhead</span>
+            <span class="kpi-value">&lt; 1.5ms</span>
+            <span class="kpi-sub">In-memory two-way translation</span>
+          </div>
+        </div>
+
+        <!-- Architecture Flow Card -->
+        <div class="card" style="margin-bottom: 24px;">
+          <h3 class="card-title">How Felix Decouples LLMs from Enterprise Data</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 16px;">
+            Employees can query concrete transactions in Slack, Teams, or the Web UI. The Local Vault scrubs all identifiers before the prompt reaches Gemini, and rehydrates the results before display.
+          </p>
+          <div class="privacy-architecture-diagram">
+            <div class="arch-node user-node">
+              <span class="node-tag">User Platform</span>
+              <strong>Slack / Teams / Web</strong>
+              <code>"Check bd3aa0d0..."</code>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-node vault-node">
+              <span class="node-tag">Local Vault</span>
+              <strong>PII Tokenizer</strong>
+              <small>Replaces with surrogate tokens</small>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-node llm-node">
+              <span class="node-tag">External LLM</span>
+              <strong>Gemini 3.8 Flash</strong>
+              <code>"WHERE txn_id = '{{TXN_REF_1}}'"</code>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-node db-node">
+              <span class="node-tag">Tool Interceptor</span>
+              <strong>Enterprise DB</strong>
+              <small>Desanitizes query & scrubs rows</small>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-node rehydrate-node">
+              <span class="node-tag">Local Vault</span>
+              <strong>Rehydrator</strong>
+              <code>"Txn bd3aa0d0 resolved"</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Decoupling Sandbox -->
+        <div class="card" style="margin-bottom: 24px;">
+          <h3 class="card-title">Live Decoupling Sandbox & Simulator</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 14px;">
+            Test any sample question containing credit cards, customer emails, or transaction IDs to inspect the real-time two-way transformation.
+          </p>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="privacy-sample-txn-btn">Sample: Real Transaction UUID</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="privacy-sample-card-btn">Sample: Card + Email + Txn</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="privacy-sample-deny-btn">Sample: Blocked Deny-List Query</button>
+          </div>
+
+          <div class="form-group">
+            <textarea id="privacy-test-input" class="form-control" rows="2" placeholder="Type or paste any query with PII (e.g. Can you check why transaction bd3aa0d0-2cf7-46f0-a2b6-8a498a8eb49b for john.doe@acme.com failed?)"></textarea>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <button type="button" class="btn btn-primary" id="privacy-test-run-btn">
+              <span>Run Decoupling Simulation</span>
+            </button>
+          </div>
+
+          <!-- Simulation Results -->
+          <div id="privacy-sim-results" style="display: none; margin-top: 20px;">
+            <div class="sim-grid">
+              <div class="sim-card">
+                <span class="sim-card-header in-color">1. Inbound User Prompt</span>
+                <pre class="sim-box" id="sim-raw-input"></pre>
+              </div>
+              <div class="sim-card">
+                <span class="sim-card-header llm-color">2. Sanitized for LLM (Zero-PII)</span>
+                <pre class="sim-box" id="sim-sanitized-output"></pre>
+              </div>
+              <div class="sim-card">
+                <span class="sim-card-header out-color">3. Rehydrated for Human Teams</span>
+                <pre class="sim-box" id="sim-rehydrated-output"></pre>
+              </div>
+            </div>
+
+            <!-- Token Mapping Table -->
+            <div style="margin-top: 16px;">
+              <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Active Surrogate Token Mapping in Local RAM</h4>
+              <div class="table-responsive">
+                <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                      <th style="padding: 6px 10px;">Surrogate Token (LLM View)</th>
+                      <th style="padding: 6px 10px;">Real Value (Local DB View)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sim-mapping-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Privacy Audit Log Table -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 class="card-title" style="margin-bottom: 0;">Enterprise PII Scrubbing Audit Trail</h3>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="privacy-refresh-audit-btn">Refresh Audit</button>
+          </div>
+          <div class="table-responsive" style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                  <th style="padding: 8px 10px;">Timestamp</th>
+                  <th style="padding: 8px 10px;">Entity Type</th>
+                  <th style="padding: 8px 10px;">Surrogate Token</th>
+                  <th style="padding: 8px 10px;">Masked Preview</th>
+                  <th style="padding: 8px 10px;">Action</th>
+                  <th style="padding: 8px 10px;">Source</th>
+                </tr>
+              </thead>
+              <tbody id="privacy-audit-tbody">
+                <tr>
+                  <td colspan="6" style="padding: 16px; text-align: center; color: var(--text-muted);">
+                    No PII entities scrubbed yet. Run an investigation or test the simulation sandbox above.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           6. ENTERPRISE INTEGRATIONS SECTION (PHASE 5)
+           ========================================== -->
+      <section id="tab-integrations" class="tab-pane" role="tabpanel">
+        <div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h2>Enterprise Workplace Integrations</h2>
+            <p class="section-desc">Connect, configure, monitor, and manage workplace messaging platforms (Microsoft Teams & Slack) to Felix.</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <span class="integration-status-pill status-connected" id="integrations-system-health-pill">
+              <span class="status-dot"></span> System Operational
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-integrations-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -2px;">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Refresh Status
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION 1: INTEGRATION OVERVIEW CARDS -->
+        <div class="integration-overview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 28px;">
+          
+          <!-- Microsoft Teams Card -->
+          <div class="card integration-card" id="card-overview-teams" style="border-top: 4px solid #4f52b2;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="integration-logo teams-logo-bg">
+                  <!-- Teams SVG Icon -->
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect width="24" height="24" rx="4" fill="#464EB8"/>
+                    <path d="M14.5 9.5C14.5 8.12 15.62 7 17 7C18.38 7 19.5 8.12 19.5 9.5C19.5 10.88 18.38 12 17 12C15.62 12 14.5 10.88 14.5 9.5Z" fill="white"/>
+                    <path d="M14 13.5C14 12.67 14.67 12 15.5 12H18.5C19.33 12 20 12.67 20 13.5V17H14V13.5Z" fill="white"/>
+                    <path d="M7 8C7 6.34 8.34 5 10 5C11.66 5 13 6.34 13 8C13 9.66 11.66 11 10 11C8.34 11 7 9.66 7 8Z" fill="white"/>
+                    <path d="M4.5 13C4.5 11.9 5.4 11 6.5 11H13.5C14.6 11 15.5 11.9 15.5 13V18H4.5V13Z" fill="white"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 2px;">Microsoft Teams</h3>
+                  <span style="font-size: 0.8rem; color: var(--text-secondary);" id="teams-card-org">Enterprise Microsoft 365 Tenant</span>
+                </div>
+              </div>
+              <span class="integration-status-pill status-config-req" id="teams-card-status">
+                <span class="status-dot"></span> Configuration Required
+              </span>
+            </div>
+
+            <!-- Metrics list -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                <span style="color: var(--text-secondary);">Last Successful Interaction:</span>
+                <strong style="color: var(--text-primary);" id="teams-card-last-interaction">Never</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                <span style="color: var(--text-secondary);">Total Messages Processed:</span>
+                <strong style="color: var(--brand-primary); font-size: 1rem;" id="teams-card-total-messages">0</strong>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button type="button" class="btn btn-sm btn-outline-danger" id="teams-disconnect-btn">Disconnect</button>
+              <button type="button" class="btn btn-sm btn-primary" id="teams-configure-btn">Configure</button>
+            </div>
+          </div>
+
+          <!-- Slack Card -->
+          <div class="card integration-card" id="card-overview-slack" style="border-top: 4px solid #4a154b;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="integration-logo slack-logo-bg">
+                  <!-- Slack SVG Icon -->
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect width="24" height="24" rx="4" fill="#4A154B"/>
+                    <path d="M6 10.5C6 9.67 6.67 9 7.5 9H9V10.5C9 11.33 8.33 12 7.5 12C6.67 12 6 11.33 6 10.5ZM10 6C10 6.83 9.33 7.5 8.5 7.5H7.5C6.67 7.5 6 6.83 6 6C6 5.17 6.67 4.5 7.5 4.5C8.33 4.5 9 5.17 9 6V6H10Z" fill="#36C5F0"/>
+                    <path d="M13.5 6C14.33 6 15 6.67 15 7.5V9H13.5C12.67 9 12 8.33 12 7.5C12 6.67 12.67 6 13.5 6ZM18 10C17.17 10 16.5 9.33 16.5 8.5V7.5C16.5 6.67 17.17 6 18 6C18.83 6 19.5 6.67 19.5 7.5C19.5 8.33 18.83 9 18 9H18V10Z" fill="#2EB67D"/>
+                    <path d="M18 13.5C18 14.33 17.33 15 16.5 15H15V13.5C15 12.67 15.67 12 16.5 12C17.33 12 18 12.67 18 13.5ZM14 18C14 17.17 14.67 16.5 15.5 16.5H16.5C17.33 16.5 18 17.17 18 18C18 18.83 17.33 19.5 16.5 19.5C15.67 19.5 15 18.83 15 18V18H14Z" fill="#ECB22E"/>
+                    <path d="M10.5 18C9.67 18 9 17.33 9 16.5V15H10.5C11.33 15 12 15.67 12 16.5C12 17.33 11.33 18 10.5 18ZM6 14C6.83 14 7.5 14.67 7.5 15.5V16.5C7.5 17.33 6.83 18 6 18C5.17 18 4.5 17.33 4.5 16.5C4.5 15.67 5.17 15 6 15H6V14Z" fill="#E01E5A"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 2px;">Slack</h3>
+                  <span style="font-size: 0.8rem; color: var(--text-secondary);" id="slack-card-workspace">Enterprise Slack Workspace</span>
+                </div>
+              </div>
+              <span class="integration-status-pill status-config-req" id="slack-card-status">
+                <span class="status-dot"></span> Configuration Required
+              </span>
+            </div>
+
+            <!-- Metrics list -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                <span style="color: var(--text-secondary);">Last Successful Interaction:</span>
+                <strong style="color: var(--text-primary);" id="slack-card-last-interaction">Never</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                <span style="color: var(--text-secondary);">Total Messages Processed:</span>
+                <strong style="color: var(--brand-primary); font-size: 1rem;" id="slack-card-total-messages">0</strong>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button type="button" class="btn btn-sm btn-outline-danger" id="slack-disconnect-btn">Disconnect</button>
+              <button type="button" class="btn btn-sm btn-primary" id="slack-configure-btn">Configure</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: CONFIGURATION PANELS -->
+        <div style="margin-bottom: 28px;" id="integrations-config-section">
+          <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700;">Platform Configuration</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Configure authentication keys, bot endpoints, and organization routing. Sensitive secrets are masked and stored securely on the backend.</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 20px;">
+            
+            <!-- Teams Configuration Form -->
+            <div class="card" id="pane-config-teams">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: #464eb8;">Microsoft Teams Settings</h4>
+                <a href="/api/teams/manifest" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem;">Download Manifest JSON</a>
+              </div>
+
+              <form id="teams-config-form">
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="teams-cfg-app-id" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Application (Client) ID</label>
+                  <input type="text" id="teams-cfg-app-id" class="form-control" placeholder="e.g. e2f1a94b-70c2-4a8b-96d5-felixbot0001" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">Azure Bot registration App ID</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="teams-cfg-tenant-id" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Microsoft 365 Tenant ID</label>
+                  <input type="text" id="teams-cfg-tenant-id" class="form-control" placeholder="e.g. 72f988bf-86f1-41af-91ab-2d7cd011db47 (or leave blank for multi-tenant)" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="teams-cfg-app-pwd" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Client Secret / App Password</label>
+                  <input type="password" id="teams-cfg-app-pwd" class="form-control" placeholder="•••••••••••• (Leave blank to keep existing)" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">Stored securely on server. Never exposed to frontend.</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="teams-cfg-org-name" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Organization Display Name</label>
+                  <input type="text" id="teams-cfg-org-name" class="form-control" placeholder="Enterprise Microsoft 365 Tenant" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Bot Messaging Endpoint (Azure Webhook)</label>
+                  <div style="display: flex; gap: 6px;">
+                    <input type="text" id="teams-cfg-endpoint" readonly value="/api/teams/messages" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; background: #f1f5f9; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                    <button type="button" class="btn btn-sm btn-outline-primary copy-btn" data-target="teams-cfg-endpoint">Copy</button>
+                  </div>
+                </div>
+
+                <div id="teams-cfg-feedback" style="display: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 12px;"></div>
+
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button type="button" class="btn btn-sm btn-outline-primary" id="teams-test-conn-btn">Test Connection</button>
+                  <button type="submit" class="btn btn-sm btn-primary" id="teams-save-cfg-btn">Save Teams Configuration</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Slack Configuration Form -->
+            <div class="card" id="pane-config-slack">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: #4a154b;">Slack App Settings</h4>
+                <a href="/api/slack/manifest" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem;">Download Manifest JSON</a>
+              </div>
+
+              <form id="slack-config-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div class="form-group">
+                    <label for="slack-cfg-app-id" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Slack App ID</label>
+                    <input type="text" id="slack-cfg-app-id" class="form-control" placeholder="e.g. A01234567" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  </div>
+                  <div class="form-group">
+                    <label for="slack-cfg-workspace-id" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Workspace ID (Team ID)</label>
+                    <input type="text" id="slack-cfg-workspace-id" class="form-control" placeholder="e.g. T01234567" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="slack-cfg-bot-token" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Bot User OAuth Token</label>
+                  <input type="password" id="slack-cfg-bot-token" class="form-control" placeholder="xoxb-•••••••••••• (Leave blank to keep existing)" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">Begins with xoxb-. Masked securely.</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="slack-cfg-signing-secret" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Signing Secret</label>
+                  <input type="password" id="slack-cfg-signing-secret" class="form-control" placeholder="•••••••••••• (Leave blank to keep existing)" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div class="form-group">
+                    <label for="slack-cfg-workspace-name" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Workspace Name</label>
+                    <input type="text" id="slack-cfg-workspace-name" class="form-control" placeholder="Enterprise Slack Workspace" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  </div>
+                  <div class="form-group">
+                    <label for="slack-cfg-bot-user-id" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Bot Mention Handle</label>
+                    <input type="text" id="slack-cfg-bot-user-id" class="form-control" placeholder="U_FELIX" style="width: 100%; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">Event Subscription Request URL (Webhook)</label>
+                  <div style="display: flex; gap: 6px;">
+                    <input type="text" id="slack-cfg-webhook" readonly value="/api/slack/events" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; background: #f1f5f9; border: 1px solid var(--border-color); border-radius: var(--radius-sm);" />
+                    <button type="button" class="btn btn-sm btn-outline-primary copy-btn" data-target="slack-cfg-webhook">Copy</button>
+                  </div>
+                </div>
+
+                <div id="slack-cfg-feedback" style="display: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 12px;"></div>
+
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button type="button" class="btn btn-sm btn-outline-primary" id="slack-test-conn-btn">Test Connection</button>
+                  <button type="submit" class="btn btn-sm btn-primary" id="slack-save-cfg-btn">Save Slack Configuration</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: INTEGRATION ACTIVITY TABLE -->
+        <div class="card" style="margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 class="card-title" style="margin-bottom: 2px;">Multi-Platform Activity Audit Trail</h3>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0;">Real-time audit log of all interactions processed across Slack, Microsoft Teams, and Web.</p>
+            </div>
+            
+            <!-- Filters Toolbar -->
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <select id="activity-filter-platform" style="padding: 6px 10px; font-size: 0.82rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: white;">
+                <option value="all">All Platforms</option>
+                <option value="slack">Slack</option>
+                <option value="teams">Microsoft Teams</option>
+                <option value="web">Web Application</option>
+              </select>
+
+              <select id="activity-filter-status" style="padding: 6px 10px; font-size: 0.82rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: white;">
+                <option value="all">All Statuses</option>
+                <option value="completed">Completed</option>
+                <option value="error">Error</option>
+              </select>
+
+              <input type="text" id="activity-search-input" placeholder="Search query or user..." style="padding: 6px 10px; font-size: 0.82rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); width: 180px;" />
+
+              <button type="button" class="btn btn-sm btn-outline-primary" id="activity-refresh-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 3px;">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Activity Table -->
+          <div class="table-responsive" style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                  <th style="padding: 8px 10px;">Timestamp</th>
+                  <th style="padding: 8px 10px;">Platform</th>
+                  <th style="padding: 8px 10px;">User</th>
+                  <th style="padding: 8px 10px;">Channel / Target</th>
+                  <th style="padding: 8px 10px;">Query</th>
+                  <th style="padding: 8px 10px;">Execution Status</th>
+                  <th style="padding: 8px 10px;">Duration</th>
+                  <th style="padding: 8px 10px;">Tools & Findings</th>
+                </tr>
+              </thead>
+              <tbody id="integrations-activity-tbody">
+                <tr>
+                  <td colspan="8" style="padding: 24px; text-align: center; color: var(--text-muted);">
+                    Loading activity records...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 4: INTEGRATION SETTINGS & HEALTH DIAGNOSTICS -->
+        <div class="card">
+          <div style="margin-bottom: 16px;">
+            <h3 class="card-title" style="margin-bottom: 2px;">Integration Settings & System Health</h3>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0;">Platform listeners, runtime toggles, and decoupled architecture health.</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            
+            <!-- Channel Toggles -->
+            <div style="padding: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #f8fafc;">
+              <h4 style="font-size: 0.88rem; font-weight: 700; margin-bottom: 10px;">Active Messaging Listeners</h4>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.82rem;">Slack Listener</div>
+                  <div style="font-size: 0.72rem; color: var(--text-secondary);">Webhook: <code>/api/slack/events</code></div>
+                </div>
+                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                  <input type="checkbox" id="toggle-slack-enabled" style="opacity: 0; width: 0; height: 0;">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.82rem;">Microsoft Teams Listener</div>
+                  <div style="font-size: 0.72rem; color: var(--text-secondary);">Endpoint: <code>/api/teams/messages</code></div>
+                </div>
+                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                  <input type="checkbox" id="toggle-teams-enabled" style="opacity: 0; width: 0; height: 0;">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Health Indicators -->
+            <div style="padding: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #f8fafc;">
+              <h4 style="font-size: 0.88rem; font-weight: 700; margin-bottom: 10px;">Decoupled Core Health</h4>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.82rem;">
+                <span style="color: var(--text-secondary);">Agent Execution Engine:</span>
+                <span class="status-badge badge-active" id="health-agent-status">Operational</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.82rem;">
+                <span style="color: var(--text-secondary);">Financial Database:</span>
+                <span class="status-badge badge-active" id="health-db-status">Connected</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem;">
+                <span style="color: var(--text-secondary);">Zero-PII Privacy Vault:</span>
+                <span class="status-badge badge-active" id="health-vault-status">Active (Deny-list Enforced)</span>
+              </div>
+            </div>
+
+            <!-- Multi-Platform Stats -->
+            <div style="padding: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #f8fafc;">
+              <h4 style="font-size: 0.88rem; font-weight: 700; margin-bottom: 10px;">Platform Routing Statistics</h4>
+              
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.82rem;">
+                <span style="color: var(--text-secondary);">Total Cross-Platform Inquiries:</span>
+                <strong style="color: var(--brand-primary); font-size: 1.05rem;" id="health-total-volume">0</strong>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">
+                All channels communicate with the same underlying Felix agent, utilizing identical diagnostic SQL tools, baselines, and surrogate PII masking.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Footer Disclaimer -->
+    <footer class="app-footer">
+      <div class="footer-disclaimer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span>Demo using synthetic data. Recommendations are not executed.</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
