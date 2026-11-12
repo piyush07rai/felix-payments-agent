@@ -1,35 +1,72 @@
-# Felix: Enterprise AI Payments Decline Analyst
+# Felix: Enterprise Autonomous Payments Agent Platform
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production--Ready-00C853?style=for-the-badge" alt="Status" />
-  <img src="https://img.shields.io/badge/Architecture-Decoupled_Agentic_System-0070F3?style=for-the-badge" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Platform-Universal_Payments_Agent-0070F3?style=for-the-badge" alt="Platform" />
+  <img src="https://img.shields.io/badge/Data_Tier-Any_DB_%7C_Any_Warehouse-FF9800?style=for-the-badge" alt="Databases" />
   <img src="https://img.shields.io/badge/Data_Privacy-Zero--PII_Vault-7928CA?style=for-the-badge" alt="Privacy" />
   <img src="https://img.shields.io/badge/Tests-30%2F30_Passing-brightgreen?style=for-the-badge" alt="Tests" />
 </p>
 
 <p align="center">
-  <b>An autonomous AI payment operations analyst that detects authorization drops, isolates multi-dimensional cohorts, and generates actionable remediation playbooks in seconds—accessible across Slack, Microsoft Teams, and an Executive Web Console.</b>
+  <b>A modular, enterprise-grade autonomous AI payments copilot that connects to any database, orchestrates any operational tool, and resolves complex payment incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
 </p>
 
 ---
 
-## 💡 The Problem: The $100M Silent Revenue Leak
+## 🎯 Platform Vision: Beyond a Single Analyst
 
-In enterprise digital commerce, global card authorization rates hover between 82% and 88%. Every 1% drop in authorization represents **$5,000,000+ in unrecovered GMV** for a high-volume merchant or payment aggregator, alongside wasted customer acquisition cost (CAC) and customer churn.
+While traditional tools are built as rigid, single-purpose dashboards, **Felix is an extensible Agentic Payments Operating System**. 
+
+It uses a **Land-and-Expand Product Architecture**:
+* **Flagship Module (The High-ROI Wedge)**: *Autonomous Payment Authorization & Decline Intelligence*. Resolves the multi-million-dollar hair-on-fire problem of unexplained authorization drops in seconds.
+* **Extensible Agentic Core**: The exact same conversational ingress, Zero-PII sanitization vault, reasoning loop, and human governance framework power multiple operational domains across **any payment rail** (Cards, UPI, A2A, Pix, FedNow, Wallets, and BNPL).
+
+```mermaid
+flowchart TD
+    subgraph CorePlatform["Felix Core Agentic Platform (Decoupled Engine)"]
+        Ingress["Omnichannel Workplace Ingress\n(Slack · Microsoft Teams · Webhook API · Executive Console)"]
+        Vault["Zero-PII Decoupling Vault\n(Surrogate Tokenizer · Schema-Level 17-Column Deny-List)"]
+        Planner["Gemini 3.8 Flash Reasoning Engine\n(Autonomous Multi-Step Hypothesis Formulation & Verification)"]
+        Governance["Enterprise Governance & Safety\n(Human Approval Framework · execution_locked = true · Audit Log)"]
+    end
+
+    subgraph PluggableModules["Pluggable Payments Operational Domains"]
+        Mod1["✅ Module 1: Auth & Decline Diagnostics\n(Current Flagship Module)\n• ISO 8583 semantic breakdown\n• Anomaly cohort isolation\n• Issuer timeout analysis"]
+        Mod2["🔄 Module 2: Smart Gateway Routing\n• Multi-acquirer MDR / interchange comparison\n• Real-time gateway failover recommendations\n• Traffic share optimization"]
+        Mod3["⚖️ Module 3: Reconciliation & Settlement\n• Processor ledger vs bank payout audit\n• Missing settlement batch detection\n• Chargeback & refund balancing"]
+        Mod4["🛡️ Module 4: Fraud & 3DS Risk Tuning\n• 3DS challenge vs frictionless drop analysis\n• Velocity abuse spike detection\n• Dispute representment evidence drafting"]
+    end
+
+    subgraph PluggableData["Pluggable Data Tier (Any DB / Any Warehouse)"]
+        Postgres["PostgreSQL / MySQL\n(Production OLTP)"]
+        Snowflake["Snowflake / Databricks / BigQuery\n(Cloud Data Warehouses)"]
+        ClickHouse["ClickHouse / DuckDB\n(Ultra-Fast Columnar OLAP)"]
+        SQLite["SQLite Sandboxed\n(Local / Edge / Demo Engine)"]
+    end
+
+    Ingress --> Vault --> Planner --> Governance
+    Planner <--> PluggableModules
+    PluggableModules <--> PluggableData
+```
+
+---
+
+## 💡 The $100M Problem: Unexplained Authorization Bleed
+
+In global digital commerce, payment authorization rates hover between 82% and 88%. A mere **1% drop in authorization represents $5,000,000+ in lost GMV** for a merchant or payment aggregator processing $500M annually, alongside wasted customer acquisition cost (CAC) and customer churn.
 
 ### The Operational Challenge:
 * **Fragmented Payment Silos**: Decline data is scattered across card network switches (Visa, Mastercard, RuPay), issuing banks, payment aggregators, and 3D Secure ACS servers.
-* **High Mean Time to Detect & Resolve (MTTD/MTTR)**: Operations and product teams spend 4+ hours running ad-hoc SQL queries or waiting for data engineering sprints while revenue leaks.
+* **High Mean Time to Detect & Resolve (MTTD/MTTR)**: Operations and product teams spend 4+ hours writing ad-hoc queries or waiting for data engineering tickets while revenue bleeds.
 * **Context Fragmentation**: Triage discussions occur in **Slack** and **Microsoft Teams**, completely isolated from analytical data warehouses.
 * **Generic AI Cannot Be Trusted**: Traditional LLMs hallucinate metrics, cannot formulate multi-step hypotheses on raw transaction ledgers, and present catastrophic data compliance risks if exposed to customer payment data (PCI-DSS).
 
 ---
 
-## ⚡ The Solution: Meet Felix
+## ⚡ The Solution: How Felix Solves It
 
-**Felix** is an autonomous AI agent engineered specifically for payments product managers and incident operations teams. 
-
-Whenever an authorization anomaly occurs, team members simply ask inside their existing chat tools:
+Whenever an authorization anomaly or payment event occurs, team members simply ask inside their existing chat tools:
 > *"@Felix, why did our RuPay approval rate drop in the last 2 hours?"*
 
 Felix autonomously:
@@ -50,7 +87,7 @@ flowchart LR
 
 ## 🏆 Competitive Advantage: Felix vs. The Market
 
-| Dimension | Traditional BI (Tableau / Looker) | Generic Chatbots (ChatGPT / Copilot) | Felix Enterprise Analyst |
+| Dimension | Traditional BI (Tableau / Looker) | Generic Chatbots (ChatGPT / Copilot) | Felix Enterprise Platform |
 | :--- | :--- | :--- | :--- |
 | **Diagnostic Model** | **Passive**: Renders charts; humans must manually slice and dice | **Text-only**: Generic answers; no live data grounding | **Autonomous Agentic**: Formulates hypotheses, executes queries, isolates cohorts |
 | **Numerical Accuracy** | 100% (SQL-based) | **Prone to Hallucinations**: Guesses percentages and statistics | **100% Deterministic**: Grounded directly in live transaction records |
@@ -60,65 +97,36 @@ flowchart LR
 
 ---
 
-## 🏗️ Architecture: Decoupled & Modular Design
+## 🔌 Decoupled by Design: Any Database, Any Tool, Any Purpose
 
-Felix is built with strict architectural decoupling across three tiers: **Messaging Ingress**, **Agentic Reasoning**, and **Data Storage**.
+Felix's true superpower is its **radical architectural decoupling**:
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Enterprise Messaging Ingress                    │
-│   [Slack @Felix app_mention]    [MS Teams @Felix]    [Web Dashboard]   │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │
-┌────────────────────────────────────▼───────────────────────────────────┐
-│                      Zero-PII Decoupling Vault                         │
-│  • Surrogate Tokenizer: Scrubs PANs, CVVs, Emails, and Names           │
-│  • Schema-Level Deny-List: Blocks 17 sensitive columns at compiler     │
-│  • Local Rehydration Vault: Restores business context safely on host   │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │ Clean Scrubber Query
-┌────────────────────────────────────▼───────────────────────────────────┐
-│                   Common Enterprise Integration Layer                  │
-│  • Unified CommonMessageRequest & Response Schemas                     │
-│  • Multi-Tenant Session Isolation (platform:org:channel:thread)        │
-│  • Asynchronous Background Worker with Event Deduplication             │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │
-┌────────────────────────────────────▼───────────────────────────────────┐
-│                   Pluggable Agentic Reasoning Core                     │
-│  • Powered by Google Gemini 3.8 Flash (google-genai function calling)  │
-│  • Autonomous Offline Fallback (Deterministic rule-based engine)       │
-│  • Sandboxed Analytical Tool Registry:                                 │
-│    ├── run_sql (Read-Only SELECT / WITH, capped at 500 rows, 5s timeout)
-│    ├── get_baseline (Dimensional variance against historical baselines)│
-│    ├── lookup_response_code (ISO 8583 semantic meaning & responsible party)
-│    └── draft_action (Structured playbook synthesis; execution locked)  │
-└───────────────────┬────────────────────────────────┬───────────────────┘
-                    │                                │
-┌───────────────────▼──────────────┐   ┌─────────────▼───────────────────┐
-│     Pluggable Database Tier      │   │     Human Approval Framework    │
-│  Compatible with:                │   │  • execution_locked = true      │
-│  PostgreSQL · Snowflake ·        │   │  • Advisory only                │
-│  ClickHouse · BigQuery · SQLite  │   │  • Admin sign-off required      │
-└──────────────────────────────────┘   └─────────────────────────────────┘
+### 1. Database-Agnostic Analytical Engine
+Felix's reasoning core does not care where your payment transactions live. The SQL executor communicates via modular database connection providers:
+* **Embedded & Local Testing**: SQLite with query-only sandboxing (`PRAGMA query_only = ON;`).
+* **Transactional Production OLTP**: Direct read-only replicas of **PostgreSQL**, **MySQL**, or **Amazon Aurora**.
+* **Enterprise Cloud Data Warehouses**: Standard connectors for **Snowflake**, **Google BigQuery**, **Databricks**, and **Amazon Redshift**.
+* **Ultra-Fast Streaming OLAP**: Native compatibility with columnar engines like **ClickHouse** and **DuckDB** for querying 100M+ transactions in $<50\text{ms}$.
+
+### 2. Extensible Tool Calling Registry
+Tools in Felix are modular Python functions registered into the Google Gen AI function-calling schema:
+```python
+@register_tool
+def simulate_routing_failover(acquirer_from: str, acquirer_to: str, volume_pct: float):
+    """Simulate projected authorization lift and cost impact of shifting traffic."""
+    ...
 ```
+You can effortlessly plug in:
+* **Operational Actions**: PagerDuty incident triggers, Jira ticket creators, or Slack alert broadcasters.
+* **Payment Gateways**: Live status check APIs for Stripe, Adyen, Checkout.com, or Razorpay.
+* **Risk & Fraud Scorecards**: Real-time fraud velocity tools and chargeback representment builders.
 
-### 1. Pluggable on Top of Any Database
-The agentic layer does not depend on SQLite. Analytical queries pass through standardized SQL interfaces:
-* **Current Default**: High-performance SQLite with query-only sandboxing (`PRAGMA query_only = ON;`).
-* **Enterprise Adapters**: Easily connects to **PostgreSQL**, **Snowflake**, **Google BigQuery**, or **ClickHouse** by updating the database connection provider.
-
-### 2. Extensible Tool Registry
-Analytical tools are modular Python functions. Want to add a PagerDuty alerting tool, an automated Jira ticket generator, or an Adyen/Stripe routing switch? Register them into `app/tools.py` with zero changes to the underlying agent brain.
-
-### 3. Omnichannel Ingress (Single Brain, Strict Isolation)
-* **Slack App**: Supports `@Felix` channel mentions, threaded discussions, and rich Slack Block Kit responses.
-* **Microsoft Teams Bot**: Integrated via Bot Framework REST Connector and Adaptive Cards 1.5.
-* **Zero Data Leakage**: Inquiries across Slack, Teams, and Web maintain strict thread-level session isolation (`platform:org:channel:thread`). Chats in Slack never leak into Teams.
+### 3. Purpose-Agnostic Reasoning Engine
+The core orchestration engine handles context management, event deduplication, token scrubbers, and role-based permissions independently of the business logic. Switching Felix from analyzing **decline spikes** to **settlement discrepancies** or **foreign exchange (FX) margin leakages** requires zero changes to the messaging layer or security architecture.
 
 ---
 
-## 🛡️ Enterprise Security, Governance & Safety
+## 🛡️ Enterprise Security, Privacy & Safety Invariants
 
 1. **Zero-PII Decoupling Vault**:
    - Customer Primary Account Numbers (PANs), cardholder names, CVVs, and passwords are intercepted before prompts reach the LLM.
