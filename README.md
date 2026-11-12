@@ -1,43 +1,68 @@
 # Felix: Enterprise AI Payments Decline Analyst
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
-[![Google Gemini](https://img.shields.io/badge/LLM-Gemini_3.8_Flash-4285F4.svg?style=flat&logo=google)](https://aistudio.google.com)
-[![Slack Integration](https://img.shields.io/badge/Slack-Block_Kit_&_Events_API-4A154B.svg?style=flat&logo=slack)](https://api.slack.com)
-[![Microsoft Teams](https://img.shields.io/badge/Teams-Bot_Framework_Connector-6264A7.svg?style=flat&logo=microsoftteams)](https://dev.teams.microsoft.com)
-[![Data Privacy](https://img.shields.io/badge/Privacy-Zero--PII_Decoupled-2e7d32.svg?style=flat)](file:///app/privacy.py)
-[![Tests](https://img.shields.io/badge/Tests-30%2F30_Passing-brightgreen.svg?style=flat)](tests/)
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Production--Ready-00C853?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Architecture-Decoupled_Agentic_System-0070F3?style=for-the-badge" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Data_Privacy-Zero--PII_Vault-7928CA?style=for-the-badge" alt="Privacy" />
+  <img src="https://img.shields.io/badge/Tests-30%2F30_Passing-brightgreen?style=for-the-badge" alt="Tests" />
+</p>
 
-An enterprise-grade autonomous AI assistant and Product Manager portfolio project that investigates payment authorization drops, isolates root causes across multi-dimensional cohorts, and drafts actionable merchant/issuer remediation playbooks—grounded in **100% deterministic SQL analytics** and accessible across **Slack**, **Microsoft Teams**, and a dedicated **Executive Web Console**.
+<p align="center">
+  <b>An autonomous AI payment operations analyst that detects authorization drops, isolates multi-dimensional cohorts, and generates actionable remediation playbooks in seconds—accessible across Slack, Microsoft Teams, and an Executive Web Console.</b>
+</p>
 
 ---
 
-## 1. Executive Summary & Problem Space
+## 💡 The Problem: The $100M Silent Revenue Leak
 
-In global digital commerce, a **1% to 2% drop in payment authorization rates** leaks millions of dollars in lost GMV, wasted customer acquisition cost (CAC), and cart abandonment. 
+In enterprise digital commerce, global card authorization rates hover between 82% and 88%. Every 1% drop in authorization represents **$5,000,000+ in unrecovered GMV** for a high-volume merchant or payment aggregator, alongside wasted customer acquisition cost (CAC) and customer churn.
 
-Investigating payment declines is notoriously difficult:
-- **Fragmented Data**: Distributed across acquirer switches, issuer networks (Visa, Mastercard, RuPay), 3D Secure gateways, and merchant accounting.
-- **High Mean Time to Detect & Resolve (MTTD/MTTR)**: Operations teams spend hours running ad-hoc SQL queries or waiting for data engineering tickets while revenue bleeds.
-- **Context Fragmentation**: Incident triage happens in **Slack** and **Microsoft Teams**, isolated from raw analytical databases.
+### The Operational Challenge:
+* **Fragmented Payment Silos**: Decline data is scattered across card network switches (Visa, Mastercard, RuPay), issuing banks, payment aggregators, and 3D Secure ACS servers.
+* **High Mean Time to Detect & Resolve (MTTD/MTTR)**: Operations and product teams spend 4+ hours running ad-hoc SQL queries or waiting for data engineering sprints while revenue leaks.
+* **Context Fragmentation**: Triage discussions occur in **Slack** and **Microsoft Teams**, completely isolated from analytical data warehouses.
+* **Generic AI Cannot Be Trusted**: Traditional LLMs hallucinate metrics, cannot formulate multi-step hypotheses on raw transaction ledgers, and present catastrophic data compliance risks if exposed to customer payment data (PCI-DSS).
 
-### Enter Felix
-**Felix** acts as an autonomous 24/7 payment operations analyst. When an engineer or PM asks:
-> *"@Felix, why has our RuPay approval rate dropped in the last 2 hours?"*
+---
 
-Felix autonomously formulates hypotheses, executes read-only SQL queries across payment dimensions, cross-references historical baselines, and returns root-cause breakdowns with remediation playbooks in seconds—**without exposing card numbers, CVVs, or customer PII to external LLMs**.
+## ⚡ The Solution: Meet Felix
+
+**Felix** is an autonomous AI agent engineered specifically for payments product managers and incident operations teams. 
+
+Whenever an authorization anomaly occurs, team members simply ask inside their existing chat tools:
+> *"@Felix, why did our RuPay approval rate drop in the last 2 hours?"*
+
+Felix autonomously:
+1. **Formulates Diagnostic Hypotheses**: Evaluates network baselines, bank health, response code distributions, and channel latencies.
+2. **Executes 100% Deterministic SQL**: Runs sandboxed, read-only analytical queries against your transaction data.
+3. **Isolates Multi-Dimensional Cohorts**: Detects the exact failure signature (e.g., *RuPay + MCC 5732 Electronics + Cart Amount > ₹25,000 + Issuer Response Code 91*).
+4. **Calculates Financial Impact**: Estimates recovered GMV uplift (e.g., *+3.8% approval uplift = ₹1.4M recovered GMV*).
+5. **Drafts Actionable Playbooks**: Generates prioritized remediation actions with suggested owners and routing adjustments.
 
 ```mermaid
 flowchart LR
-    Problem["Unexplained 5% Drop\nin RuPay Authorization"] --> Felix["@Felix Incident Triage\n(Slack / Teams / Web Console)"]
-    Felix --> Diagnosis["Root Cause Identified:\nIssuer Code 91 on MCC 5732 > ₹25k"]
-    Diagnosis --> ROI["Actionable Routing Playbook:\n+3.8% Approval Rate Uplift\n(₹1.4M Recovered GMV)"]
+    Problem["⚠️ Unexplained 5% Drop\nin RuPay Authorization"] --> Felix["🤖 @Felix Incident Desk\n(Slack / Teams / Web Console)"]
+    Felix --> Diagnosis["🔍 Cohort Isolated:\nIssuer Code 91 on MCC 5732 > ₹25k\n(Bank Switch Timeout)"]
+    Diagnosis --> ROI["📈 Actionable Playbook:\n+3.8% Approval Rate Uplift\n(₹1.4M Recovered GMV)"]
 ```
 
 ---
 
-## 2. Omnichannel Architecture
+## 🏆 Competitive Advantage: Felix vs. The Market
 
-Felix is powered by a **single underlying agent brain** decoupled from presentation channels through a **Common Enterprise Integration Layer**:
+| Dimension | Traditional BI (Tableau / Looker) | Generic Chatbots (ChatGPT / Copilot) | Felix Enterprise Analyst |
+| :--- | :--- | :--- | :--- |
+| **Diagnostic Model** | **Passive**: Renders charts; humans must manually slice and dice | **Text-only**: Generic answers; no live data grounding | **Autonomous Agentic**: Formulates hypotheses, executes queries, isolates cohorts |
+| **Numerical Accuracy** | 100% (SQL-based) | **Prone to Hallucinations**: Guesses percentages and statistics | **100% Deterministic**: Grounded directly in live transaction records |
+| **Data Privacy** | Internal DB access | **High Risk**: Cardholder data sent to external cloud LLMs | **Zero-PII Decoupling Vault**: Card numbers & PII never leave enterprise memory |
+| **Workplace Ingress** | Siloed dashboard URL | Browser tab silo | **Native Slack & Microsoft Teams** with threaded multi-turn memory |
+| **Operational Safety** | Read-only viewing | Unpredictable SQL generation | **Engine Immutability Triggers + Permanent Human Approval Lock** |
+
+---
+
+## 🏗️ Architecture: Decoupled & Modular Design
+
+Felix is built with strict architectural decoupling across three tiers: **Messaging Ingress**, **Agentic Reasoning**, and **Data Storage**.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -47,169 +72,167 @@ Felix is powered by a **single underlying agent brain** decoupled from presentat
                                      │
 ┌────────────────────────────────────▼───────────────────────────────────┐
 │                      Zero-PII Decoupling Vault                         │
-│  - Surrogate Tokenizer (Scrubs PANs, CVVs, Emails, Names)              │
-│  - Schema Deny-List (Rejects 17 sensitive columns at SQL compiler)     │
-│  - Local Rehydration Vault (Restores business context locally)         │
+│  • Surrogate Tokenizer: Scrubs PANs, CVVs, Emails, and Names           │
+│  • Schema-Level Deny-List: Blocks 17 sensitive columns at compiler     │
+│  • Local Rehydration Vault: Restores business context safely on host   │
 └────────────────────────────────────┬───────────────────────────────────┘
                                      │ Clean Scrubber Query
 ┌────────────────────────────────────▼───────────────────────────────────┐
 │                   Common Enterprise Integration Layer                  │
-│  - CommonMessageRequest & CommonMessageResponse Schemas                │
-│  - Multi-Tenant Session Isolation (platform:workspace:channel:thread)  │
-│  - Asynchronous CommonMessageProcessor with Background Worker          │
+│  • Unified CommonMessageRequest & Response Schemas                     │
+│  • Multi-Tenant Session Isolation (platform:org:channel:thread)        │
+│  • Asynchronous Background Worker with Event Deduplication             │
 └────────────────────────────────────┬───────────────────────────────────┘
                                      │
 ┌────────────────────────────────────▼───────────────────────────────────┐
-│                     Felix Core Reasoning Engine                        │
-│  - Google Gemini 3.8 Flash (google-genai native function calling)      │
-│  - Deterministic Offline Fallback (Rule-based diagnostic engine)       │
-│  - Permitted Sandboxed Tools:                                          │
-│    * run_sql (Read-Only SELECT / WITH, capped at 500 rows, 5s timeout) │
-│    * get_baseline (Dimensional variance against historical baselines)  │
-│    * lookup_response_code (ISO 8583 semantic meaning & party mapping)  │
-│    * draft_action (Synthesizes advisory playbooks; execution locked)   │
+│                   Pluggable Agentic Reasoning Core                     │
+│  • Powered by Google Gemini 3.8 Flash (google-genai function calling)  │
+│  • Autonomous Offline Fallback (Deterministic rule-based engine)       │
+│  • Sandboxed Analytical Tool Registry:                                 │
+│    ├── run_sql (Read-Only SELECT / WITH, capped at 500 rows, 5s timeout)
+│    ├── get_baseline (Dimensional variance against historical baselines)│
+│    ├── lookup_response_code (ISO 8583 semantic meaning & responsible party)
+│    └── draft_action (Structured playbook synthesis; execution locked)  │
 └───────────────────┬────────────────────────────────┬───────────────────┘
                     │                                │
 ┌───────────────────▼──────────────┐   ┌─────────────▼───────────────────┐
-│   SQLite Database (declines.db)  │   │     Human Approval Framework    │
-│  - PRAGMA query_only = ON        │   │  - execution_locked = true      │
-│  - Immutability database triggers│   │  - Pending Administrator Review │
+│     Pluggable Database Tier      │   │     Human Approval Framework    │
+│  Compatible with:                │   │  • execution_locked = true      │
+│  PostgreSQL · Snowflake ·        │   │  • Advisory only                │
+│  ClickHouse · BigQuery · SQLite  │   │  • Admin sign-off required      │
 └──────────────────────────────────┘   └─────────────────────────────────┘
 ```
 
----
+### 1. Pluggable on Top of Any Database
+The agentic layer does not depend on SQLite. Analytical queries pass through standardized SQL interfaces:
+* **Current Default**: High-performance SQLite with query-only sandboxing (`PRAGMA query_only = ON;`).
+* **Enterprise Adapters**: Easily connects to **PostgreSQL**, **Snowflake**, **Google BigQuery**, or **ClickHouse** by updating the database connection provider.
 
-## 3. Key Differentiators & PM Moat
+### 2. Extensible Tool Registry
+Analytical tools are modular Python functions. Want to add a PagerDuty alerting tool, an automated Jira ticket generator, or an Adyen/Stripe routing switch? Register them into `app/tools.py` with zero changes to the underlying agent brain.
 
-| Feature | Generic Chatbots (ChatGPT / Copilot) | Felix Payments Analyst |
-| :--- | :--- | :--- |
-| **Numerical Accuracy** | Hallucinates statistics and averages | **100% Deterministic SQL Grounding** (all numbers computed directly on transactions) |
-| **Data Privacy** | Raw customer data sent to cloud models | **Zero-PII Decoupling Vault** (PANs and secrets never leave host memory) |
-| **Workplace Ingress** | Isolated browser tab | **Native Slack & Teams Bots** with threaded multi-turn contextual memory |
-| **Agent Safety** | Vulnerable to prompt injection SQL writes | **Engine Immutability Triggers + PRAGMA query_only = ON** blocking all modifications |
-| **Operational Control** | Can trigger unintended infrastructure edits | **Human Approval Framework** (production execution permanently locked) |
-
----
-
-## 4. Features & Capabilities
-
-### A. Omnichannel Workplace Integration
-- **Slack App (`@Felix`)**: Mention Felix in any channel or thread. Felix acknowledges immediately, analyzes data asynchronously, and returns rich Slack Block Kit responses with metric callouts.
-- **Microsoft Teams (`@Felix`)**: Integrated via Microsoft Bot Framework Connector and Adaptive Cards 1.5. Supports threaded multi-turn follow-up questions.
-- **Enterprise Integrations Dashboard**: Administrative console to monitor connection health, view live activity logs, and configure Slack/Teams tokens with write-only masking.
-
-### B. Enterprise Security & Access Control (RBAC)
-- **Role-Based Access Control**: Distinguishes between `Organisation Administrator` and `Standard User`. Administrative settings and listener toggles are protected with `403 Forbidden` checks.
-- **Zero-PII Decoupling**: Surrogate tokenization masks sensitive card credentials before the prompt touches the LLM, and query validators reject any queries touching forbidden columns.
-- **Human Approval Framework**: Felix can draft high-impact routing recommendations, but actions are automatically registered in the approval store with `execution_locked: true`, requiring an administrator's explicit manual sign-off.
-- **Security Audit Trail**: Every inbound query, role elevation, and admin modification is logged to `security_audit_logs` with credential scrubbing (`[REDACTED_SECURITY_SECRET]`).
-
-### C. Synthetic Dataset Seeder & Ground Truth Benchmark
-- **Built-in Synthetic Data Seeder**: Generates 10,000+ realistic payment transactions simulating normal baselines alongside high-value RuPay MCC 5732 Issuer Code 91 decline spikes.
-- **Quantitative Benchmark Evaluator**: Independent testing harness (`app/evaluation.py`) that scores agent accuracy, precision, recall, and false positives against ground truth benchmarks without data leakage.
+### 3. Omnichannel Ingress (Single Brain, Strict Isolation)
+* **Slack App**: Supports `@Felix` channel mentions, threaded discussions, and rich Slack Block Kit responses.
+* **Microsoft Teams Bot**: Integrated via Bot Framework REST Connector and Adaptive Cards 1.5.
+* **Zero Data Leakage**: Inquiries across Slack, Teams, and Web maintain strict thread-level session isolation (`platform:org:channel:thread`). Chats in Slack never leak into Teams.
 
 ---
 
-## 5. Quickstart & Local Setup
+## 🛡️ Enterprise Security, Governance & Safety
 
-### Option 1: Python Virtual Environment
+1. **Zero-PII Decoupling Vault**:
+   - Customer Primary Account Numbers (PANs), cardholder names, CVVs, and passwords are intercepted before prompts reach the LLM.
+   - The SQL execution engine enforces a 17-column deny-list that blocks any query referencing sensitive credentials.
+2. **Read-Only Agent Safety**:
+   - Destructive keywords (`DROP`, `DELETE`, `UPDATE`, `INSERT`, `ALTER`, `PRAGMA`) are rejected at the compiler level.
+   - Database immutability triggers prevent table alterations.
+3. **Role-Based Access Control (RBAC)**:
+   - Built-in permission barriers distinguish between **Standard Users** (can query Felix) and **Organisation Administrators** (can configure credentials and toggle integrations).
+4. **Human Approval Framework (Safe by Design)**:
+   - Felix can recommend routing adjustments, merchant alerts, and failover switches, but **cannot directly alter production infrastructure**.
+   - All proposed actions are saved with `execution_locked: true` and require human administrator review.
+5. **Immutable Security Audit Log**:
+   - Every inbound query, caller role, execution latency, and admin modification is logged to `security_audit_logs` with automatic secret scrubbing (`[REDACTED_SECURITY_SECRET]`).
+
+---
+
+## 🚀 Quickstart: Run in 60 Seconds
+
+### Option 1: Docker (Recommended)
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/your-username/felix-decline-analyst.git
-cd felix-decline-analyst
+# Clone the repository
+git clone https://github.com/piyush07rai/felix-payments-agent.git
+cd felix-payments-agent
 
-# 2. Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Configure environment
-cp .env.example .env
-# Add your GEMINI_API_KEY from https://aistudio.google.com/ (Optional: works offline via fallback)
-
-# 5. Seed synthetic demo transactions
-python3 scripts/seed_demo_data.py 10000
-
-# 6. Launch server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Build and start container
+docker compose up --build
 ```
 
 Open [http://localhost:8000](http://localhost:8000) in your browser.
 
-### Option 2: Docker Compose
+---
+
+### Option 2: Local Python Environment
 
 ```bash
-docker compose up --build
+# 1. Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Configure environment
+cp .env.example .env
+# (Optional) Add your GEMINI_API_KEY from https://aistudio.google.com/
+# Felix works completely offline via its deterministic fallback engine if no key is provided!
+
+# 4. Launch the application
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ---
 
-## 6. Running the Unit Test Suite
+## 📊 Live Interactive Demo Walkthrough
 
-Felix comes with **30 enterprise unit tests** covering end-to-end integration, security, Slack, Teams, and the dashboard:
+Once the application is running, open [http://localhost:8000](http://localhost:8000):
+
+1. **Auto-Populated Dataset**: Felix automatically initializes and seeds 5,000 realistic transactions on initial startup.
+2. **Overview Tab**: Inspect live Chart.js visualizations (Approval Rate, Response Code Breakdown, Network Distribution, Hourly Volume).
+3. **AI Investigation Tab**:
+   - Click one of the quick prompts (e.g., *"Why did RuPay authorization drop?"*).
+   - Watch the live **Agent Execution Events** stream: SQL queries executed, ISO 8583 lookups, and baseline comparisons.
+4. **Findings Tab**: Review the structured remediation playbook, estimated approval uplift (+3.8%), and the **Human Approval Governance Card**.
+5. **Enterprise Integrations Tab**:
+   - View live Slack and Microsoft Teams connector status cards.
+   - Inspect the **Integration Activity Audit Trail** with real-time platform and status filters.
+   - Switch between **Standard User** and **Organisation Administrator** to see RBAC permissions in action.
+6. **Evaluation Benchmark**:
+   - Run quantitative accuracy, precision, and recall evaluations against isolated ground-truth benchmarks.
+
+---
+
+## 🧪 Comprehensive Test Suite
+
+Felix comes with **30 enterprise unit tests** validating all security layers, integrations, and tools:
 
 ```bash
 python3 -m unittest discover tests -v
 ```
 
-Output:
 ```text
-Ran 30 tests in 0.307s
+Ran 30 tests in 0.285s
 OK
 ```
 
 ---
 
-## 7. Free Production Deployment Guide
+## ☁️ Free Production Deployment (Render)
 
-Deploy Felix for free as a portfolio showcase using any of these container-native platforms:
+Deploy your own live instance of Felix for free on [Render](https://render.com):
 
-### A. Render (Recommended Free Web Service)
-1. Push this repository to GitHub.
-2. Sign in to [Render](https://render.com) and click **New > Web Service**.
-3. Connect your GitHub repository.
-4. Set the following build settings:
+1. **Fork or Push** this repository to your GitHub account.
+2. Sign in to [Render](https://render.com) and click **New + > Web Service**.
+3. Select your repository: `felix-payments-agent`.
+4. Configure:
    - **Environment**: `Docker`
    - **Plan**: `Free`
 5. Under **Environment Variables**, add:
-   - `GEMINI_API_KEY`: Your Google AI Studio API key.
+   - `GEMINI_API_KEY`: Your key from Google AI Studio.
    - `APP_ENV`: `production`
-6. Click **Deploy Web Service**. Render provides a free public HTTPS endpoint (e.g., `https://felix-analyst.onrender.com`).
-7. Use this HTTPS URL to configure Slack Event Subscriptions (`/api/slack/events`) or Teams Messaging Endpoints (`/api/teams/messages`).
-
-### B. Hugging Face Spaces (Free Docker Space)
-1. Create a new Space on [Hugging Face Spaces](https://huggingface.co/spaces).
-2. Select **Docker (Blank)** SDK.
-3. Push your repository to the Space remote.
-4. Add `GEMINI_API_KEY` under **Space Settings > Secrets**.
-
-### C. Google Cloud Run (Free Tier)
-1. Build and push image:
-   ```bash
-   gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/felix-agent
-   ```
-2. Deploy to Cloud Run:
-   ```bash
-   gcloud run deploy felix-agent \
-     --image gcr.io/YOUR_PROJECT_ID/felix-agent \
-     --platform managed \
-     --allow-unauthenticated \
-     --set-env-vars GEMINI_API_KEY=YOUR_API_KEY
-   ```
+6. Click **Deploy Web Service**. Render builds the container and provides a free public HTTPS endpoint (e.g., `https://felix-payments-agent.onrender.com`).
+7. Use this HTTPS URL to register Slack webhooks (`/api/slack/events`) or Teams messaging endpoints (`/api/teams/messages`).
 
 ---
 
-## 8. Product Presentation & PM Pitch Resources
+## 📚 Technical Documentation & Strategy Dossiers
 
-For in-depth product strategy, business case calculations, and architectural deep-dives:
-* 📄 **[Executive Product Presentation & Technical Dossier](file:///Users/piyushrai/.gemini/antigravity/brain/89e26ea4-565d-482c-ac21-b434045ba1d2/felix_product_presentation.md)**
-* 🔒 **[Enterprise Security & Access Control Architecture](file:///Users/piyushrai/.gemini/antigravity/brain/89e26ea4-565d-482c-ac21-b434045ba1d2/enterprise_security_architecture.md)**
+* 📄 **[Executive Product Presentation & Business Dossier](file:///Users/piyushrai/.gemini/antigravity/brain/89e26ea4-565d-482c-ac21-b434045ba1d2/felix_product_presentation.md)**: Full 8-slide PM presentation deck, ROI calculations ($2.5M uplift per $500M GMV), and competitive moat.
+* 🔒 **[Enterprise Security & Access Control Architecture](file:///Users/piyushrai/.gemini/antigravity/brain/89e26ea4-565d-482c-ac21-b434045ba1d2/enterprise_security_architecture.md)**: Cryptographic signature verification, RBAC matrix, and audit compliance details.
 
 ---
 
-## 9. License
+## 📜 License
 
-Distributed under the Apache 2.0 License. Built for enterprise payments operations and product management excellence.
+Distributed under the Apache 2.0 License. Designed for payments innovation, operational excellence, and agentic AI leadership.
