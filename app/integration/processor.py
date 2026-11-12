@@ -8,7 +8,7 @@ and formats unified responses.
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.agent import analyst_agent
 from app.integration.schemas import CommonMessageRequest, CommonMessageResponse
@@ -28,7 +28,7 @@ class CommonMessageProcessor:
         self.agent = agent or analyst_agent
         self.session_mgr = session_mgr or session_manager
 
-    def validate_request(self, req: CommonMessageRequest) -> Tuple_Validation:
+    def validate_request(self, req: CommonMessageRequest) -> Tuple[bool, str]:
         """Verify that the normalized request has all required enterprise fields."""
         if not req.platform or not str(req.platform).strip():
             return False, "Missing 'platform' in request (e.g. 'slack', 'teams', 'web')."
@@ -200,9 +200,6 @@ class CommonMessageProcessor:
         """Asynchronously process an incoming message request in a worker thread."""
         return await asyncio.to_thread(self.process_message, req)
 
-
-# Simple type alias for validation tuple
-Tuple_Validation = tuple[bool, str]
 
 # Default singleton processor
 common_message_processor = CommonMessageProcessor()
