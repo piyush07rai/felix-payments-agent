@@ -723,19 +723,144 @@ body {
   border-radius: var(--radius-md);
   font-size: 0.88rem;
   line-height: 1.5;
-  white-space: pre-wrap;
   word-break: break-word;
 }
 
 .assistant-message .message-body {
-  background: #f8fafc;
+  background: #ffffff;
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  line-height: 1.6;
+  white-space: normal;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.assistant-message .message-body .chat-paragraph {
+  margin: 0 0 10px 0;
+  font-size: 0.90rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.assistant-message .message-body .chat-heading {
+  margin: 16px 0 8px 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.assistant-message .message-body h2.chat-heading { font-size: 1.15rem; }
+.assistant-message .message-body h3.chat-heading { font-size: 1.05rem; }
+.assistant-message .message-body h4.chat-heading { 
+  font-size: 0.96rem; 
+  border-left: 3px solid #2563eb; 
+  padding-left: 8px; 
+}
+.assistant-message .message-body h5.chat-heading { font-size: 0.88rem; color: #475569; }
+
+.assistant-message .message-body .chat-divider {
+  border: 0;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 14px 0;
+}
+
+.assistant-message .message-body .chat-list {
+  margin: 6px 0 12px 20px;
+  padding: 0;
+  font-size: 0.88rem;
+  color: #334155;
+}
+
+.assistant-message .message-body .chat-list li {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.assistant-message .message-body .chat-code {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+/* Elegant Modern Chat Table */
+.chat-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 14px 0;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.chat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  text-align: left;
+}
+
+.chat-table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.chat-table th {
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.chat-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.chat-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+/* Metric Delta Badges */
+.badge-pos {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-neg {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 .user-message .message-body {
   background: var(--brand-primary);
   color: #ffffff;
+  white-space: pre-wrap;
 }
 
 .chat-form {

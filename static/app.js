@@ -1097,6 +1097,177 @@ function initChatInterface() {
     }
   }
 
+  function renderMarkdown(text) {
+    if (!text) return "";
+
+    // 1. Sanitize raw HTML tags to prevent XSS
+    const escaped = String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    const lines = escaped.split(/\r?\n/);
+    const output = [];
+    let inTable = false;
+    let tableHeader = [];
+    let tableAlignments = [];
+    let tableRows = [];
+    let inList = false;
+    let listType = null;
+
+    function flushList() {
+      if (inList) {
+        output.push(listType === "ul" ? "</ul>" : "</ol>");
+        inList = false;
+        listType = null;
+      }
+    }
+
+    function formatInline(str) {
+      if (!str) return "";
+      return str
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/__(.+?)__/g, "<strong>$1</strong>")
+        .replace(/`([^`]+)`/g, '<code class="chat-code">$1</code>')
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    }
+
+    function flushTable() {
+      if (inTable) {
+        let html = '<div class="chat-table-wrapper"><table class="chat-table"><thead><tr>';
+        tableHeader.forEach((th, idx) => {
+          const align = tableAlignments[idx] || "left";
+          html += `<th style="text-align:${align}">${formatInline(th.trim())}</th>`;
+        });
+        html += "</tr></thead><tbody>";
+        tableRows.forEach((row) => {
+          html += "<tr>";
+          row.forEach((cell, idx) => {
+            const align = tableAlignments[idx] || "left";
+            const trimmed = cell.trim();
+            let cellHtml = formatInline(trimmed);
+
+            // Highlight positive / negative diffs with badges
+            const cleanText = trimmed.replace(/\*\*/g, "").trim();
+            if (/^(\+[\d.]+%?)$/.test(cleanText)) {
+              cellHtml = `<span class="badge-pos">${cellHtml}</span>`;
+            } else if (/^(\-[\d.]+%?)$/.test(cleanText)) {
+              cellHtml = `<span class="badge-neg">${cellHtml}</span>`;
+            }
+            html += `<td style="text-align:${align}">${cellHtml}</td>`;
+          });
+          html += "</tr>";
+        });
+        html += "</tbody></table></div>";
+        output.push(html);
+        inTable = false;
+        tableHeader = [];
+        tableAlignments = [];
+        tableRows = [];
+      }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const rawLine = lines[i];
+      const trimmed = rawLine.trim();
+
+      // Check if line is a table line
+      if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+        flushList();
+        const cells = trimmed.slice(1, -1).split("|");
+        if (!inTable) {
+          // Look ahead for delimiter row (e.g. | :--- | :---: |)
+          if (i + 1 < lines.length && /^\s*\|?\s*:?-+:?\s*\|/.test(lines[i + 1].trim())) {
+            inTable = true;
+            tableHeader = cells;
+            const sepCells = lines[i + 1].trim().replace(/^\||\|$/g, "").split("|");
+            tableAlignments = sepCells.map((s) => {
+              const t = s.trim();
+              if (t.startsWith(":") && t.endsWith(":")) return "center";
+              if (t.endsWith(":")) return "right";
+              return "left";
+            });
+            i++; // Skip delimiter row
+            continue;
+          }
+        } else {
+          tableRows.push(cells);
+          continue;
+        }
+      } else {
+        flushTable();
+      }
+
+      // Horizontal rule
+      if (/^(---+|\*\*\*+|___+)$/.test(trimmed)) {
+        flushList();
+        output.push('<hr class="chat-divider">');
+        continue;
+      }
+
+      // Headers
+      if (trimmed.startsWith("#### ")) {
+        flushList();
+        output.push(`<h5 class="chat-heading">${formatInline(trimmed.slice(5))}</h5>`);
+        continue;
+      }
+      if (trimmed.startsWith("### ")) {
+        flushList();
+        output.push(`<h4 class="chat-heading">${formatInline(trimmed.slice(4))}</h4>`);
+        continue;
+      }
+      if (trimmed.startsWith("## ")) {
+        flushList();
+        output.push(`<h3 class="chat-heading">${formatInline(trimmed.slice(3))}</h3>`);
+        continue;
+      }
+      if (trimmed.startsWith("# ")) {
+        flushList();
+        output.push(`<h2 class="chat-heading">${formatInline(trimmed.slice(2))}</h2>`);
+        continue;
+      }
+
+      // Unordered list
+      const ulMatch = trimmed.match(/^[*•\-]\s+(.*)$/);
+      if (ulMatch) {
+        if (!inList || listType !== "ul") {
+          flushList();
+          inList = true;
+          listType = "ul";
+          output.push('<ul class="chat-list">');
+        }
+        output.push(`<li>${formatInline(ulMatch[1])}</li>`);
+        continue;
+      }
+
+      // Ordered list
+      const olMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+      if (olMatch) {
+        if (!inList || listType !== "ol") {
+          flushList();
+          inList = true;
+          listType = "ol";
+          output.push('<ol class="chat-list">');
+        }
+        output.push(`<li>${formatInline(olMatch[2])}</li>`);
+        continue;
+      }
+
+      // Paragraph or blank
+      flushList();
+      if (trimmed.length === 0) {
+        output.push("");
+      } else {
+        output.push(`<p class="chat-paragraph">${formatInline(trimmed)}</p>`);
+      }
+    }
+
+    flushList();
+    flushTable();
+
+    return output.filter((item) => item !== "").join("\n");
+  }
+
   function appendChatMessage(role, text, privacyMeta = null) {
     const msgEl = document.createElement("div");
     msgEl.className = `chat-message ${role}-message`;
@@ -1114,12 +1285,14 @@ function initChatInterface() {
       `;
     }
 
+    const bodyContent = role === "assistant" ? renderMarkdown(text) : escapeHtml(text);
+
     msgEl.innerHTML = `
       <div class="message-sender">
         <span class="sender-avatar">${senderAvatar}</span>
         <span>${senderTitle}</span>
       </div>
-      <div class="message-body">${escapeHtml(text)}${privacyHtml}</div>
+      <div class="message-body">${bodyContent}${privacyHtml}</div>
     `;
 
     chatStream.appendChild(msgEl);

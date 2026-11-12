@@ -94,6 +94,12 @@ MANDATORY COMPLETION REQUIREMENT:
   3. Root Cause Diagnosis (explain the exact ISO 8583 codes, bank switch timeouts, or fraud rule drops).
   4. Recommended Remediation Actions (call `draft_action` and explain practical next steps for PM / Ops teams).
 
+CRISP, HUMAN-FRIENDLY PRESENTATION RULES:
+- Write for a busy Payments Product Manager: be dense with data, clear, and punchy.
+- Avoid repetitive narrative filler, robotic meta-commentary, or repeating the same numbers in multiple paragraphs.
+- State the bottom-line takeaway in the very first sentence.
+- Use clean bullet points and clean markdown tables with proper headers.
+
 ZERO-PII DECOUPLING & SURROGATE TOKENS:
 - You operate in a strictly decoupled, zero-PII enterprise environment.
 - Sensitive entities such as transaction IDs, customer emails, card numbers, and user identifiers have been replaced with surrogate tokens (e.g. `{{TXN_REF_1}}`, `{{EMAIL_REF_1}}`, `{{CARD_REF_1}}`).
@@ -477,12 +483,12 @@ class DeclineAnalystAgent:
                     })
                     try:
                         synthesis_prompt = (
-                            "You have completed all tool query executions. Now synthesize and write the complete, final "
-                            "Executive Analytical Brief for the user: "
-                            "1. Executive Summary: Direct answer to the user query with specific baseline and decline numbers. "
-                            "2. Key Evidence & Metrics: Formatted tables showing authorization rates, drop %, and affected volumes. "
-                            "3. Root Cause Classification: Diagnosed failure category (Issuer technical, Acquirer, Business decline, Switch timeout) and exact ISO 8583 response codes. "
-                            "4. Actionable Next Steps: Concrete remediation playbooks for the Payments Ops and PM teams."
+                            "You have completed all tool query executions. Now synthesize a crisp, dense, executive brief for the Payments PM: "
+                            "1. Executive Summary: Direct 1-2 sentence answer with the primary finding and anomaly. "
+                            "2. Key Evidence & Metrics: Formatted table comparing cohorts against baseline. "
+                            "3. Root Cause Classification: Precise failure mechanism (ISO code, timeout, or business decline). "
+                            "4. Actionable Next Steps: 1-2 prioritized remediation playbooks with expected uplift. "
+                            "Keep it concise, dense with metrics, and avoid repetitive prose."
                         )
                         final_turn = chat.send_message(synthesis_prompt)
                         try:

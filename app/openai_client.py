@@ -363,11 +363,12 @@ class OpenAIAnalystClient:
                 messages.append({
                     "role": "user",
                     "content": (
-                        "You have completed all tool queries. Now provide a comprehensive, actionable Executive Analysis for the Payments PM: "
-                        "1. Executive Summary: Clearly state what happened and which cohorts are failing. "
-                        "2. Metrics & Evidence: Show specific baseline approval rates, decline drops, and transaction volumes from your query results. "
+                        "You have completed all tool queries. Now provide a crisp, dense Executive Analysis for the Payments PM: "
+                        "1. Executive Summary: State the bottom-line finding in 1-2 punchy sentences. "
+                        "2. Metrics & Evidence: Formatted table comparing key cohorts against baseline. "
                         "3. Root Cause Diagnosis: Classify the failure (e.g. Issuer technical, Acquirer, Business decline) and explain why. "
-                        "4. Recommended Actions: Give prioritized remediation steps and playbooks."
+                        "4. Recommended Actions: Give 1-2 prioritized remediation playbooks with expected uplift. "
+                        "Be concise, avoid repetitive fluff or robotic filler."
                     )
                 })
                 synth_resp = self._call_chat_api(messages=messages, tools=None, timeout=settings.LLM_TIMEOUT_SECONDS)

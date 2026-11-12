@@ -190,6 +190,24 @@ class TestFelixSlackIntegration(unittest.TestCase):
         # Ensure rehydrated output contains the real transaction ID for the human user
         self.assertIn(real_txn, resp.response_text)
 
+    def test_07_slack_mrkdwn_table_and_bold_formatting(self):
+        """Verify that markdown tables and double-asterisks are converted into clean Slack mrkdwn."""
+        from app.integration import convert_markdown_to_slack_mrkdwn
+        sample_md = (
+            "### Executive Summary\n"
+            "Performance issue on **ICICI Bank**.\n\n"
+            "| Issuer Bank | Approval Rate | Diff |\n"
+            "| :--- | :--- | :--- |\n"
+            "| **Global Baseline** | 82.30% | 0.00% |\n"
+            "| **ICICI Bank** | 81.08% | -1.22% |\n"
+        )
+        converted = convert_markdown_to_slack_mrkdwn(sample_md)
+        self.assertNotIn("**ICICI Bank**", converted)
+        self.assertIn("*ICICI Bank*", converted)
+        self.assertNotIn("###", converted)
+        self.assertIn("```", converted)  # Clean monospace code block for the table
+        self.assertIn("Issuer Bank", converted)
+
 
 if __name__ == "__main__":
     unittest.main()

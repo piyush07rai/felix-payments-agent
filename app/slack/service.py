@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 
 from app.audit_logging import log_lifecycle_event
 from app.config import settings
-from app.integration import CommonMessageRequest, CommonMessageResponse, common_message_processor
+from app.integration import CommonMessageRequest, CommonMessageResponse, common_message_processor, convert_markdown_to_slack_mrkdwn
 from app.slack.client import SlackClient, slack_client
 
 logger = logging.getLogger("app.slack.service")
@@ -130,6 +130,7 @@ class SlackEventService:
         # 4. Deliver final rich Block Kit response back to Slack thread
         slack_blocks = resp.platform_payload.get("slack", {}).get("blocks")
         final_text = resp.response_text or "Analysis complete."
+        slack_plain_text = convert_markdown_to_slack_mrkdwn(final_text)
 
         if interim_ts:
             # Update the interim thinking message with final diagnostic analysis
@@ -137,14 +138,14 @@ class SlackEventService:
                 self.client.update_message,
                 channel=channel_id,
                 ts=interim_ts,
-                text=final_text[:2900],
+                text=slack_plain_text[:2900],
                 blocks=slack_blocks
             )
         else:
             await asyncio.to_thread(
                 self.client.post_message,
                 channel=channel_id,
-                text=final_text[:2900],
+                text=slack_plain_text[:2900],
                 thread_ts=thread_ts,
                 blocks=slack_blocks
             )
