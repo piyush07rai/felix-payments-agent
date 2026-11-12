@@ -88,9 +88,12 @@ function initNavigation() {
 
 /**
  * Admin Multi-Model Selector & Resiliency Controls (Gemini / ChatGPT / Local Fallback + Auto-Failover).
+ * Allows choosing provider and manually typing or selecting any custom model endpoint name.
  */
 function initModelVersioning() {
-  const modelSelect = document.getElementById("model-provider-select");
+  const providerSelect = document.getElementById("model-provider-select");
+  const modelInput = document.getElementById("model-name-input");
+  const modelSetBtn = document.getElementById("model-set-btn");
   const failoverBtn = document.getElementById("failover-toggle-btn");
   const viewLogsBtn = document.getElementById("view-system-logs-btn");
   const logsModal = document.getElementById("system-logs-modal");
@@ -105,14 +108,11 @@ function initModelVersioning() {
   fetch("/api/config/model")
     .then(r => r.json())
     .then(d => {
-      if (modelSelect && d.provider && d.model) {
-        const targetVal = `${d.provider}:${d.model}`;
-        for (const opt of modelSelect.options) {
-          if (opt.value === targetVal || opt.value.startsWith(`${d.provider}:`)) {
-            modelSelect.value = opt.value;
-            break;
-          }
-        }
+      if (providerSelect && d.provider) {
+        providerSelect.value = d.provider;
+      }
+      if (modelInput && d.model) {
+        modelInput.value = d.model;
       }
       if (d.enable_failover !== undefined) {
         isFailoverEnabled = Boolean(d.enable_failover);
@@ -121,31 +121,85 @@ function initModelVersioning() {
     })
     .catch(() => {});
 
-  // 2. Model selection change
-  if (modelSelect) {
-    modelSelect.addEventListener("change", async () => {
-      const parts = modelSelect.value.split(":");
-      const provider = parts[0];
-      const model = parts[1] || "";
-
-      try {
-        const resp = await fetch("/api/config/model", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            provider: provider,
-            model: model,
-            enable_failover: isFailoverEnabled
-          })
-        });
-        const data = await resp.json();
-        if (resp.ok && data.success) {
-          await fetchSystemStatus();
-        } else {
-          alert(data.detail || "Failed to switch AI model.");
+  // 2. Provider selection change -> automatically suggest default model name if empty
+  if (providerSelect && modelInput) {
+    providerSelect.addEventListener("change", () => {
+      const p = providerSelect.value;
+      if (p === "gemini") {
+        if (!modelInput.value || modelInput.value.includes("gpt") || modelInput.value.includes("local")) {
+          modelInput.value = "gemini-3.8-flash";
         }
-      } catch (err) {
-        alert(`Error updating AI model: ${err.message}`);
+      } else if (p === "openai") {
+        if (!modelInput.value || modelInput.value.includes("gemini") || modelInput.value.includes("local")) {
+          modelInput.value = "gpt-4o-mini";
+        }
+      } else if (p === "fallback") {
+        modelInput.value = "local-analytical-engine";
+      }
+    });
+  }
+
+  // 3. Save / Update Model (supports arbitrary manual names like gemini-3.5-flash-lite)
+  async function applyModelConfig() {
+    if (!providerSelect || !modelInput) return;
+    const provider = providerSelect.value;
+    const model = modelInput.value.trim();
+
+    if (!model) {
+      alert("Please enter a valid model identifier (e.g. gemini-3.5-flash-lite, gpt-4o-mini).");
+      return;
+    }
+
+    if (modelSetBtn) {
+      modelSetBtn.disabled = true;
+      modelSetBtn.textContent = "...";
+    }
+
+    try {
+      const resp = await fetch("/api/config/model", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: provider,
+          model: model,
+          enable_failover: isFailoverEnabled
+        })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        if (modelSetBtn) {
+          modelSetBtn.textContent = "Saved ✓";
+          setTimeout(() => {
+            modelSetBtn.textContent = "Set";
+            modelSetBtn.disabled = false;
+          }, 1500);
+        }
+        await fetchSystemStatus();
+      } else {
+        alert(data.detail || "Failed to update AI model configuration.");
+        if (modelSetBtn) {
+          modelSetBtn.textContent = "Set";
+          modelSetBtn.disabled = false;
+        }
+      }
+    } catch (err) {
+      alert(`Error updating AI model: ${err.message}`);
+      if (modelSetBtn) {
+        modelSetBtn.textContent = "Set";
+        modelSetBtn.disabled = false;
+      }
+    }
+  }
+
+  if (modelSetBtn) {
+    modelSetBtn.addEventListener("click", applyModelConfig);
+  }
+
+  if (modelInput) {
+    modelInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyModelConfig();
       }
     });
   }
