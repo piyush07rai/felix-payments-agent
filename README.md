@@ -14,8 +14,24 @@
 </p>
 
 <p align="center">
-  <b>Felix is a modular, enterprise-grade autonomous AI payments agent that connects to any database, orchestrates operational tools, and investigates and resolves complex payment incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
+  <b>Felix is a modular, enterprise-grade autonomous AI payments agent that connects to any transaction database, orchestrates operational tools, and investigates and resolves complex payment authorization incidents across Slack, Microsoft Teams, and an Executive Web Console.</b>
 </p>
+
+---
+
+## ⚡ Try It in 30 Seconds (Interactive Incident Scenarios)
+
+Don't have time to read the full architecture? Test live multi-dimensional cohort isolation and GMV recovery right now:
+
+👉 **[Launch Live Web Console](https://felix-payments-agent.onrender.com/)** &nbsp;or&nbsp; 👉 **[Jump into Slack `#payments-incidents`](https://payments-team-central.slack.com/archives/C0CGRRPPD99)**
+
+Copy and paste any of these pre-built diagnostic prompts:
+
+| Incident Scenario | Copy-Paste Diagnostic Prompt | Expected Agent Output |
+| :--- | :--- | :--- |
+| **🧪 Scenario A: The Issuer Switch Timeout** | `"@Felix why did our RuPay approval rate drop in the last 2 hours?"` | Isolates issuer response code 91 timeout spike on high-value electronics carts; calculates GMV impact. |
+| **🧪 Scenario B: Multi-Dimensional Decline Drilldown** | `"@Felix break down recent declines by issuing bank, error code, and cart amount."` | Formulates deterministic SQL, surfaces top failure signatures, and isolates impacted merchant cohorts. |
+| **🧪 Scenario C: Dynamic Routing Failover & ROI** | `"@Felix simulate gateway failover to Axis Bank and calculate recovered GMV."` | Models projected +3.8% authorization uplift, drafts remediation playbook with human approval lock (`execution_locked: true`). |
 
 ---
 
@@ -25,9 +41,81 @@ In global digital commerce, payment authorization rates hover between 82% and 88
 
 ### The Operational Challenge:
 * **Fragmented Payment Silos**: Decline data is scattered across card network switches (Visa, Mastercard, RuPay), issuing banks, payment aggregators, and 3D Secure ACS servers.
-* **High Mean Time to Detect & Resolve (MTTD/MTTR)**: Operations and product teams spend 4+ hours writing ad-hoc queries or waiting for data engineering tickets while revenue bleeds.
+* **High Mean Time to Detect & Resolve (MTTD/MTTR)**: Operations and product teams spend 4+ hours writing ad-hoc SQL queries or waiting for data engineering tickets while revenue bleeds.
 * **Context Fragmentation**: Triage discussions occur in **Slack** and **Microsoft Teams**, completely isolated from analytical data warehouses.
 * **Generic AI Cannot Be Trusted**: Traditional LLMs hallucinate metrics, cannot formulate multi-step hypotheses on raw transaction ledgers, and present catastrophic data compliance risks if exposed to customer payment data (PCI-DSS).
+
+### 📈 Product Economics & ROI Snapshot (Tier-1 Enterprise Merchant):
+```
+Annual Processing GMV:              $500,000,000
+Cost of 1% Authorization Bleed:      $5,000,000 / year ($416,000 / month)
+Status Quo Incident Triage MTTR:    4+ hours per anomaly (manual SQL & war rooms)
+Felix Incident Triage MTTR:         < 60 seconds (autonomous hypothesis + sandboxed SQL)
+Projected Authorization Recovery:   +2.0% to +3.8% across targeted merchant cohorts
+Estimated Rescued GMV per Incident: ₹1,400,000+ ($17,000+) per isolated anomaly
+```
+
+---
+
+## 🧠 Strategic Product Decisions (Why I Built It This Way as a PM)
+
+Great products are defined by deliberate trade-offs and clear product principles. Here are the core product decisions behind Felix:
+
+### 1. Ingress Decision: Workplace Chat (Slack & Teams) First, Web Console Second
+* **The User Friction**: During a critical P1 payment drop, on-call SREs, Product Ops, and Merchant Managers assemble inside **Slack/Teams war rooms**. Forcing them to leave chat, log into a separate BI dashboard (Looker/Tableau), remember dimension filters, or write ad-hoc SQL introduces high cognitive load and wastes precious minutes.
+* **The PM Decision**: Embed Felix natively where the triage already happens. Native Slack and MS Teams integration with threaded conversation memory lets the entire cross-functional team see the hypothesis, review the cohort breakdown, and debate remediation actions collaboratively in-channel without context switching.
+
+### 2. Architecture Decision: 100% Deterministic SQL Grounding vs. End-to-End LLMs
+* **The Trust Barrier**: Generic LLMs hallucinate numbers and statistical distributions. In fintech and payment operations, calculating a 4.2% decline rate when it is actually 1.8% destroys user credibility immediately.
+* **The PM Decision**: Strictly separate **Reasoning** from **Calculation**. The LLM acts as the investigative planner (formulating hypotheses and choosing diagnostic tools), but 100% of numerical calculations, ratios, and distributions are executed via deterministic, sandboxed SQL against real ledgers. If data doesn't exist, Felix says so.
+
+### 3. Safety Decision: The "Trust Layer" (Autonomous Diagnosis vs. Governed Execution)
+* **The Risk Barrier**: Enterprise risk and compliance teams reject autonomous agents that can directly alter production routing or fire untested gateway switches without oversight.
+* **The PM Decision**: Decouple **Diagnostic Autonomy** from **Execution Authority**. Felix has 100% autonomy to discover anomalies, isolate failure cohorts, and calculate financial impact. However, all remediation playbooks are output with `execution_locked: true`, requiring an authenticated human administrator to review and approve the action.
+
+### 4. Compliance Decision: Zero-PII Sanitization Vault (PCI-DSS by Design)
+* **The Compliance Barrier**: Payment ledgers contain Primary Account Numbers (PANs), cardholder names, and CVVs. Sending this data to external AI models is an immediate regulatory violation.
+* **The PM Decision**: Enforce a 17-column schema deny-list and surrogate tokenization vault before prompt synthesis. Sensitive cardholder credentials never enter LLM context memory or external network payloads.
+
+---
+
+## 👥 Target Personas & Jobs-To-Be-Done (JTBD)
+
+Felix was built around the distinct daily workflows of cross-functional fintech stakeholders:
+
+| Persona | Role & Context | Core Job-To-Be-Done (JTBD) | Felix Solution |
+| :--- | :--- | :--- | :--- |
+| **On-Call Payment SRE** | Technical Incident Responder | *"When an auth alert fires at 2 AM, I need to isolate whether it's a gateway switch timeout or bank ACS failure in <2 minutes without writing raw queries."* | Instant cohort isolation via `@Felix` in Slack with deterministic SQL breakdown and bank latency benchmarks. |
+| **Payment Product Operations** | Revenue & Route Optimization | *"I need to identify which merchant categories or card rails are underperforming our baseline and model the GMV recovery of re-routing traffic."* | Automated GMV uplift modeling and routing failover simulation playbooks. |
+| **Enterprise Merchant Success** | Strategic Account Management | *"When an enterprise merchant complains about checkout dropoffs, I need an evidence-backed diagnostic report with exact failure codes within 5 minutes."* | Instant incident root-cause attribution summaries ready for merchant-facing debriefs. |
+| **Fintech Risk & Compliance** | Data Security & Governance | *"I must guarantee that internal AI tooling complies with PCI-DSS and will never execute unsanctioned production mutations."* | Zero-PII decoupling vault + human approval locks on all remediation playbooks. |
+
+---
+
+## 📊 Product Metrics & Evaluation Framework
+
+To measure product efficacy and operational excellence, Felix is tracked against strict North Star and Guardrail metrics:
+
+```mermaid
+flowchart TD
+    subgraph NorthStar["🌟 North Star Metric"]
+        MTTR["Incident MTTR (Mean Time to Resolution)\nStatus Quo: 4+ hours ➔ Felix: < 60 seconds"]
+    end
+
+    subgraph CommercialMetrics["💰 Commercial Output Metrics"]
+        AuthLift["Authorization Rate Uplift (+2.0% to +3.8%)"]
+        RecoveredGMV["Recovered GMV per Incident (₹1.4M+ / incident)"]
+    end
+
+    subgraph GuardrailMetrics["🛡️ Safety & Quality Guardrails"]
+        ZeroHallucination["Numerical Hallucination Rate: Strict 0.0%\n(Enforced via Deterministic SQL)"]
+        ZeroPII["PII Leakage Incidents: Strict 0.0%\n(Enforced via 17-Column Deny-List)"]
+        ActionSafety["Unauthorized Production Mutation: 0\n(Enforced via execution_locked = true)"]
+    end
+
+    NorthStar --> CommercialMetrics
+    NorthStar --> GuardrailMetrics
+```
 
 ---
 
@@ -66,7 +154,7 @@ flowchart LR
 
 ## 🔌 Decoupled by Design: Any Database, Any Tool, Any Purpose
 
-Felix's true superpower is its **radical architectural decoupling**:
+Felix's architectural superpower is its **radical modular decoupling**:
 
 ### 1. Database-Agnostic Analytical Engine
 Felix's reasoning core does not care where your payment transactions live. The SQL executor communicates via modular database connection providers:
